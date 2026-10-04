@@ -591,7 +591,36 @@ body {
 
     letter-spacing: 0.5px;
 }
+/* =========================================================
+   INDIVIDUAL TYPED LETTER
+   ========================================================= */
 
+.target-letter {
+    display: inline-block;
+
+    color: #ffffff;
+
+    transition:
+        color 0.18s ease,
+        transform 0.18s ease,
+        text-shadow 0.18s ease;
+}
+
+
+/* CORRECTLY TYPED LETTER */
+
+.target-letter.typed {
+
+    color: #55f5a5;
+
+    text-shadow:
+        0 0 8px rgba(70, 255, 160, 0.8),
+        0 0 18px rgba(70, 255, 160, 0.45);
+
+    transform:
+        translateY(-1px)
+        scale(1.08);
+}
 
 /* WRONG INPUT */
 
@@ -626,10 +655,11 @@ body {
    ========================================================= */
 
 .burst {
+
     position: absolute;
 
-    width: 10px;
-    height: 10px;
+    width: 12px;
+    height: 12px;
 
     border-radius: 50%;
 
@@ -637,11 +667,93 @@ body {
 
     pointer-events: none;
 
-    z-index: 15;
+    z-index: 25;
 
-    animation: burst 0.45s ease-out forwards;
+    animation:
+        burst 0.55s ease-out forwards;
+}
+/* =========================================================
+   TINY SPARKLES
+   ========================================================= */
+
+.sparkle {
+
+    position: absolute;
+
+    width: 4px;
+    height: 4px;
+
+    border-radius: 50%;
+
+    background: #ffffff;
+
+    pointer-events: none;
+
+    z-index: 30;
+
+    box-shadow:
+        0 0 5px rgba(255, 255, 255, 0.95),
+        0 0 10px rgba(130, 255, 190, 0.75);
+
+    animation:
+        sparkle-fly 0.4s ease-out forwards;
 }
 
+
+.sparkle::after {
+
+    content: "";
+
+    position: absolute;
+
+    width: 2px;
+    height: 10px;
+
+    left: 1px;
+    top: -3px;
+
+    border-radius: 50%;
+
+    background: #ffffff;
+
+    opacity: 0.8;
+
+    transform: rotate(45deg);
+}
+
+
+/* =========================================================
+   SPARKLE ANIMATION
+   ========================================================= */
+
+@keyframes sparkle-fly {
+
+    0% {
+
+        transform:
+            translate(0, 0)
+            scale(1.2);
+
+        opacity: 1;
+    }
+
+    45% {
+
+        opacity: 1;
+    }
+
+    100% {
+
+        transform:
+            translate(
+                var(--spark-x),
+                var(--spark-y)
+            )
+            scale(0);
+
+        opacity: 0;
+    }
+}
 
 /* =========================================================
    PAUSE SCREEN
@@ -892,16 +1004,42 @@ body.bg-custom {
 }
 
 @keyframes burst {
+
     0% {
-        transform: scale(1);
+
+        transform:
+            translate(-50%, -50%)
+            scale(0.3);
 
         opacity: 1;
+
+        box-shadow:
+            0 0 5px rgba(255, 255, 255, 0.9);
+    }
+
+    35% {
+
+        transform:
+            translate(-50%, -50%)
+            scale(2);
+
+        opacity: 0.9;
+
+        box-shadow:
+            0 0 20px rgba(90, 255, 180, 0.9),
+            0 0 40px rgba(120, 100, 255, 0.6);
     }
 
     100% {
-        transform: scale(6);
+
+        transform:
+            translate(-50%, -50%)
+            scale(7);
 
         opacity: 0;
+
+        box-shadow:
+            0 0 50px rgba(90, 255, 180, 0);
     }
 }
 
