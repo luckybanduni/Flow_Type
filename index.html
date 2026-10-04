@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>FlowType — Type Freely</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="game">
+
+    <!-- ================= TOP BAR ================= -->
+
+    <header class="top-bar">
+
+        <div class="logo">
+            <span>⌨</span>
+            FlowType
+        </div>
+
+        <div class="stats">
+
+            <div class="stat">
+                <span>Level</span>
+                <strong id="level">1</strong>
+            </div>
+
+            <div class="stat">
+                <span>WPM</span>
+                <strong id="wpm">0</strong>
+            </div>
+
+            <div class="stat">
+                <span>ACC</span>
+                <strong id="accuracy">100%</strong>
+            </div>
+
+            <div class="stat">
+                <span>Combo</span>
+                <strong id="combo">0</strong>
+            </div>
+
+            <div class="stat">
+                <span>Typed</span>
+                <strong id="score">0</strong>
+            </div>
+
+        </div>
+
+
+        <!-- ================= TOP RIGHT CONTROLS ================= -->
+
+        <div class="top-controls">
+
+            <!-- MUSIC -->
+
+            <button
+                id="musicToggle"
+                class="icon-button"
+                title="Toggle Music"
+                type="button">
+
+                🎵
+
+            </button>
+
+
+            <!-- BACKGROUND -->
+
+            <button
+                id="backgroundToggle"
+                class="icon-button"
+                title="Change Background"
+                type="button">
+
+                🖼️
+
+            </button>
+
+
+            <!-- BACKGROUND MENU -->
+
+            <div
+                id="backgroundMenu"
+                class="background-menu">
+
+                <div class="background-title">
+                    Choose Background
+                </div>
+
+
+                <button
+                    class="background-option active"
+                    data-background="default"
+                    type="button">
+
+                    🌌
+                    <span>Default</span>
+
+                </button>
+
+
+                <button
+                    class="background-option"
+                    data-background="custom"
+                    type="button">
+
+                    🖼️
+                    <span>My Background</span>
+
+                </button>
+
+
+                <button
+                    class="background-option"
+                    data-background="sakura"
+                    type="button">
+
+                    🌸
+                    <span>Sakura</span>
+
+                </button>
+
+
+                <button
+                    class="background-option"
+                    data-background="night"
+                    type="button">
+
+                    🌙
+                    <span>Night</span>
+
+                </button>
+
+
+                <button
+                    class="background-option"
+                    data-background="dark"
+                    type="button">
+
+                    ⚫
+                    <span>Dark</span>
+
+                </button>
+
+
+                <!-- UPLOAD -->
+
+                <label
+                    class="upload-background"
+                    for="backgroundUpload">
+
+                    📁
+                    <span>Upload Background</span>
+
+                </label>
+
+                <input
+                    type="file"
+                    id="backgroundUpload"
+                    accept="image/*"
+                    hidden>
+
+            </div>
+
+        </div>
+
+    </header>
+
+
+    <!-- ================= GAME AREA ================= -->
+
+    <main id="gameArea">
+
+
+        <!-- ================= WELCOME SCREEN ================= -->
+
+        <div class="welcome" id="welcome">
+
+            <div class="welcome-icon">
+                ⌨
+            </div>
+
+            <h1>
+                Just type.
+            </h1>
+
+            <p>
+                Practice makes a man Perfect
+                <br>
+            </p>
+
+
+            <!-- ================= SPEED ================= -->
+
+            <div class="speed-section">
+
+                <p class="speed-title">
+                    Choose your speed
+                </p>
+
+
+                <div class="speed-options">
+
+
+                    <button
+                        class="speed-option active"
+                        data-speed="slow"
+                        type="button">
+
+                        🐢
+                        <span>Relaxed</span>
+
+                    </button>
+
+
+                    <button
+                        class="speed-option"
+                        data-speed="easy"
+                        type="button">
+
+                        🚶
+                        <span>Easy</span>
+
+                    </button>
+
+
+                    <button
+                        class="speed-option"
+                        data-speed="normal"
+                        type="button">
+
+                        🏃
+                        <span>Normal</span>
+
+                    </button>
+
+
+                    <button
+                        class="speed-option"
+                        data-speed="fast"
+                        type="button">
+
+                        ⚡
+                        <span>Fast</span>
+
+                    </button>
+
+
+                    <button
+                        class="speed-option"
+                        data-speed="very-fast"
+                        type="button">
+
+                        🔥
+                        <span>Very Fast</span>
+
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- ================= START ================= -->
+
+            <button
+                id="startButton"
+                class="start-button"
+                type="button">
+
+                Start Typing
+
+            </button>
+
+        </div>
+
+
+        <!-- ================= GAME CONTROLS ================= -->
+
+        <div
+            class="game-controls"
+            id="gameControls">
+
+            <button
+                id="pauseButton"
+                type="button">
+
+                ⏸ Pause
+
+            </button>
+
+
+            <button
+                id="restartButton"
+                type="button">
+
+                ↻ Restart
+
+            </button>
+
+        </div>
+
+
+        <!-- ================= PAUSE ================= -->
+
+        <div
+            class="pause-screen"
+            id="pauseScreen">
+
+            <div class="pause-box">
+
+                <div class="pause-icon">
+                    Ⅱ
+                </div>
+
+                <h2>
+                    Paused
+                </h2>
+
+                <p>
+                    Take your time.
+                </p>
+
+                <button
+                    id="resumeButton"
+                    type="button">
+
+                    Continue
+
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <!-- ================= RESULTS ================= -->
+
+        <div
+            class="results-screen"
+            id="resultsScreen">
+
+            <div class="results-box">
+
+                <h2>
+                    Nice flow.
+                </h2>
+
+
+                <div class="result-row">
+
+                    <span>
+                        Typed
+                    </span>
+
+                    <strong id="finalScore">
+                        0
+                    </strong>
+
+                </div>
+
+
+                <div class="result-row">
+
+                    <span>
+                        WPM
+                    </span>
+
+                    <strong id="finalWpm">
+                        0
+                    </strong>
+
+                </div>
+
+
+                <div class="result-row">
+
+                    <span>
+                        Accuracy
+                    </span>
+
+                    <strong id="finalAccuracy">
+                        100%
+                    </strong>
+
+                </div>
+
+
+                <button
+                    id="playAgainButton"
+                    type="button">
+
+                    Play again
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </main>
+
+
+    <!-- ================= FOOTER ================= -->
+
+    <footer>
+
+        <span>
+            Made By Lucky_Banduni 😁
+        </span>
+
+        <span class="footer-divider">
+            •
+        </span>
+
+        <a
+            href="https://instagram.com/Lucky_Banduni"
+            target="_blank"
+            rel="noopener noreferrer">
+
+            Instagram
+
+        </a>
+
+    </footer>
+
+</div>
+
+
+<!-- ================= JAVASCRIPT ================= -->
+
+<script src="script.js"></script>
+
+</body>
+</html>
