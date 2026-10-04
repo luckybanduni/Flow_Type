@@ -616,22 +616,16 @@ function createTarget() {
         return;
     }
 
+    const element = document.createElement("div");
 
-    const element =
-        document.createElement("div");
-
-
-    const isWord =
-        Math.random() < 0.4;
-
+    const isWord = Math.random() < 0.4;
 
     if (isWord) {
 
         targetText =
             words[
                 Math.floor(
-                    Math.random() *
-                    words.length
+                    Math.random() * words.length
                 )
             ];
 
@@ -640,26 +634,73 @@ function createTarget() {
             "word"
         );
 
+        // Create individual letters
+        [...targetText].forEach((char, index) => {
+
+            const letter = document.createElement("span");
+
+            letter.className = "target-letter";
+            letter.textContent = char;
+
+            letter.dataset.index = index;
+
+            element.appendChild(letter);
+
+        });
+
     } else {
 
         targetText =
             letters[
                 Math.floor(
-                    Math.random() *
-                    letters.length
+                    Math.random() * letters.length
                 )
             ];
 
-        element.classList.add(
-            "game-item"
-        );
+        element.classList.add("game-item");
 
+        element.textContent = targetText;
     }
 
+    /* -----------------------------------------
+       POSITION
+    ----------------------------------------- */
 
-    element.textContent =
-        targetText;
+    const areaWidth =
+        gameArea.clientWidth;
 
+    const itemWidth =
+        isWord ? 110 : 55;
+
+    const randomX =
+        randomNumber(
+            20,
+            Math.max(
+                21,
+                areaWidth - itemWidth - 20
+            )
+        );
+
+    const randomY = -60;
+
+    element.style.left =
+        `${randomX}px`;
+
+    element.style.top =
+        `${randomY}px`;
+
+    gameArea.appendChild(element);
+
+    currentTarget = element;
+
+    typedText = "";
+
+    /* -----------------------------------------
+       START FALLING
+    ----------------------------------------- */
+
+    animateTarget(element);
+}
 
     /* -----------------------------------------
        POSITION
@@ -1204,32 +1245,50 @@ function handleWordInput(key) {
         return;
     }
 
-
     totalAttempts++;
-
     totalCharacters++;
-
 
     const expectedCharacter =
         targetText[
             typedText.length
         ];
 
+    /* -----------------------------------------
+       CORRECT LETTER
+    ----------------------------------------- */
 
-    if (
-        key === expectedCharacter
-    ) {
+    if (key === expectedCharacter) {
 
         correctCharacters++;
 
         typedText += key;
 
-
-        currentTarget.textContent =
-            targetText.substring(
-                typedText.length
+        // Find the letter that was just typed
+        const letters =
+            currentTarget.querySelectorAll(
+                ".target-letter"
             );
 
+        const typedIndex =
+            typedText.length - 1;
+
+        if (letters[typedIndex]) {
+
+            letters[typedIndex].classList.add(
+                "typed"
+            );
+
+            // Tiny sparkle effect
+            createSparkles(
+                letters[typedIndex]
+            );
+        }
+
+        playTypingSound(true);
+
+        /* -----------------------------------------
+           WORD COMPLETE
+        ----------------------------------------- */
 
         if (
             typedText.length >=
@@ -1237,42 +1296,39 @@ function handleWordInput(key) {
         ) {
 
             score++;
-
             combo++;
 
-
-            showCorrectEffect();
-
+            createCompletionBurst(
+                currentTarget
+            );
 
             removeCurrentTarget();
 
-
             updateLevel();
-
-
             updateStats();
-
 
             scheduleNextTarget();
 
         } else {
 
             updateStats();
-
         }
 
-    } else {
+    }
+
+    /* -----------------------------------------
+       WRONG LETTER
+    ----------------------------------------- */
+
+    else {
 
         combo = 0;
 
         showWrongEffect();
 
         updateStats();
-
     }
-
 }
-
 
 /* =========================================================
    REMOVE CURRENT TARGET
@@ -1305,73 +1361,58 @@ function removeCurrentTarget() {
 
 function showCorrectEffect() {
 
-    if (
-        !currentTarget
-    ) {
+    if (!currentTarget) {
         return;
     }
 
+    currentTarget.classList.add("correct");
 
-    currentTarget.classList.add(
-        "correct"
-    );
+    playTypingSound(true);
 
+    setTimeout(() => {
 
-    playTypingSound(
-        true
-    );
+        if (currentTarget) {
 
+            currentTarget.classList.remove(
+                "correct"
+            );
+
+        }
+
+    }, 180);
 }
-
 
 /* =========================================================
    WRONG EFFECT
    ========================================================= */
-
 function showWrongEffect() {
 
-    if (
-        !currentTarget
-    ) {
+    if (!currentTarget) {
         return;
     }
 
-
     currentTarget.classList.remove(
-        "shake"
+        "shake",
+        "wrong"
     );
 
-
     void currentTarget.offsetWidth;
-
 
     currentTarget.classList.add(
         "shake",
         "wrong"
     );
 
+    playTypingSound(false);
 
-    playTypingSound(
-        false
-    );
-
-
-    if (
-        navigator.vibrate
-    ) {
-
-        navigator.vibrate(
-            40
-        );
-
+    // Phone vibration
+    if (navigator.vibrate) {
+        navigator.vibrate([35, 25, 35]);
     }
-
 
     setTimeout(() => {
 
-        if (
-            currentTarget
-        ) {
+        if (currentTarget) {
 
             currentTarget.classList.remove(
                 "wrong"
@@ -1379,8 +1420,7 @@ function showWrongEffect() {
 
         }
 
-    }, 180);
-
+    }, 220);
 }
 
 
@@ -1394,42 +1434,183 @@ function createBurst(element) {
         return;
     }
 
-
     const burst =
-        document.createElement(
-            "div"
-        );
+        document.createElement("div");
 
-
-    burst.className =
-        "burst";
-
+    burst.className = "burst";
 
     burst.style.left =
         element.offsetLeft +
         element.offsetWidth / 2 +
         "px";
 
-
     burst.style.top =
         element.offsetTop +
         element.offsetHeight / 2 +
         "px";
 
-
-    gameArea.appendChild(
-        burst
-    );
-
+    gameArea.appendChild(burst);
 
     setTimeout(() => {
-
         burst.remove();
+    }, 600);
+}
+/* =========================================================
+   TINY SPARKLES
+   ========================================================= */
 
-    }, 500);
+function createSparkles(element) {
 
+    if (!element) {
+        return;
+    }
+
+    const rect =
+        element.getBoundingClientRect();
+
+    const areaRect =
+        gameArea.getBoundingClientRect();
+
+    const centerX =
+        rect.left -
+        areaRect.left +
+        rect.width / 2;
+
+    const centerY =
+        rect.top -
+        areaRect.top +
+        rect.height / 2;
+
+    const sparkleCount = 5;
+
+    for (
+        let i = 0;
+        i < sparkleCount;
+        i++
+    ) {
+
+        const sparkle =
+            document.createElement("span");
+
+        sparkle.className =
+            "sparkle";
+
+        sparkle.style.left =
+            `${centerX}px`;
+
+        sparkle.style.top =
+            `${centerY}px`;
+
+        const angle =
+            Math.random() *
+            Math.PI * 2;
+
+        const distance =
+            12 +
+            Math.random() * 20;
+
+        sparkle.style.setProperty(
+            "--spark-x",
+            `${Math.cos(angle) * distance}px`
+        );
+
+        sparkle.style.setProperty(
+            "--spark-y",
+            `${Math.sin(angle) * distance}px`
+        );
+
+        sparkle.style.animationDelay =
+            `${Math.random() * 0.05}s`;
+
+        gameArea.appendChild(
+            sparkle
+        );
+
+        setTimeout(() => {
+            sparkle.remove();
+        }, 450);
+    }
 }
 
+
+/* =========================================================
+   WORD COMPLETION BURST
+   ========================================================= */
+
+function createCompletionBurst(element) {
+
+    if (!element) {
+        return;
+    }
+
+    // Main burst
+    createBurst(element);
+
+    // Extra sparkle explosion
+    const rect =
+        element.getBoundingClientRect();
+
+    const areaRect =
+        gameArea.getBoundingClientRect();
+
+    const centerX =
+        rect.left -
+        areaRect.left +
+        rect.width / 2;
+
+    const centerY =
+        rect.top -
+        areaRect.top +
+        rect.height / 2;
+
+    for (
+        let i = 0;
+        i < 18;
+        i++
+    ) {
+
+        const sparkle =
+            document.createElement("span");
+
+        sparkle.className =
+            "sparkle completion";
+
+        sparkle.style.left =
+            `${centerX}px`;
+
+        sparkle.style.top =
+            `${centerY}px`;
+
+        const angle =
+            Math.random() *
+            Math.PI * 2;
+
+        const distance =
+            25 +
+            Math.random() * 45;
+
+        sparkle.style.setProperty(
+            "--spark-x",
+            `${Math.cos(angle) * distance}px`
+        );
+
+        sparkle.style.setProperty(
+            "--spark-y",
+            `${Math.sin(angle) * distance}px`
+        );
+
+        sparkle.style.animationDelay =
+            `${Math.random() * 0.08}s`;
+
+        gameArea.appendChild(
+            sparkle
+        );
+
+        setTimeout(() => {
+            sparkle.remove();
+        }, 650);
+    }
+}
 
 /* =========================================================
    LEVEL
