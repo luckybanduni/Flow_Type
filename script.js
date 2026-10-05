@@ -702,62 +702,6 @@ function createTarget() {
     animateTarget(element);
 }
 
-    /* -----------------------------------------
-       POSITION
-       ----------------------------------------- */
-
-    const areaWidth =
-        gameArea.clientWidth;
-
-    const areaHeight =
-        gameArea.clientHeight;
-
-
-    const itemWidth =
-        isWord ? 110 : 55;
-
-
-    const randomX =
-        randomNumber(
-            20,
-            Math.max(
-                21,
-                areaWidth - itemWidth - 20
-            )
-        );
-
-
-    const randomY = -60;
-
-
-    element.style.left =
-        `${randomX}px`;
-
-    element.style.top =
-        `${randomY}px`;
-
-
-    gameArea.appendChild(
-        element
-    );
-
-
-    currentTarget = element;
-
-    typedText = "";
-
-
-    /* -----------------------------------------
-       START FALLING
-       ----------------------------------------- */
-
-    animateTarget(
-        element
-    );
-
-}
-
-
 /* =========================================================
    TARGET ANIMATION
    ========================================================= */
