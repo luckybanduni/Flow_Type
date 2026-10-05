@@ -120,11 +120,14 @@ let animationFrame = null;
 
 let spawnTimer = null;
 
-let currentTarget = null;
+// All targets currently visible on the screen.
+const activeTargets = new Set();
 
-let targetText = "";
+// The word/letter the player is currently typing.
+let activeTypingTarget = null;
 
-let typedText = "";
+// Prevent old animation loops from affecting a restarted game.
+let gameSession = 0;
 
 
 /* =========================================================
@@ -558,7 +561,6 @@ document.addEventListener(
     }
 );
 
-
 /* =========================================================
    RANDOM TARGET CONTENT
    ========================================================= */
@@ -566,14 +568,12 @@ document.addEventListener(
 const letters = "abcdefghijklmnopqrstuvwxyz";
 
 const words = [
-    // General
     "apple", "orange", "banana", "grape", "water", "cloud",
     "river", "ocean", "mountain", "forest", "flower", "garden",
     "summer", "winter", "spring", "autumn", "morning", "evening",
     "night", "light", "shadow", "dream", "world", "space",
     "planet", "star", "moon", "sun", "earth", "sky",
 
-    // Technology
     "code", "coding", "program", "programmer", "developer",
     "computer", "keyboard", "mouse", "screen", "website",
     "internet", "browser", "server", "database", "software",
@@ -582,75 +582,61 @@ const words = [
     "variable", "object", "array", "string", "button",
     "project", "editor", "github", "online", "mobile",
 
-    // Gaming
     "game", "gaming", "player", "level", "score", "power",
-    "battle", "enemy", "mission", "quest", "world", "hero",
-    "action", "speed", "race", "drive", "truck", "car",
-    "fighter", "weapon", "boss", "victory", "challenge",
-    "adventure", "arcade", "console", "controller", "skill",
-    "winner", "start", "finish", "jump", "run",
+    "battle", "enemy", "mission", "quest", "hero", "action",
+    "speed", "race", "drive", "truck", "car", "fighter",
+    "boss", "victory", "challenge", "adventure", "arcade",
+    "console", "controller", "skill", "winner", "start",
+    "finish", "jump", "run",
 
-    // Learning
     "learn", "study", "practice", "knowledge", "school",
     "student", "teacher", "book", "lesson", "answer",
     "question", "problem", "solution", "idea", "brain",
-    "memory", "focus", "attention", "smart", "skill",
-    "language", "science", "math", "history", "future",
+    "memory", "focus", "attention", "smart", "language",
+    "science", "math", "history", "future",
 
-    // Creative
     "create", "creative", "design", "artist", "picture",
     "music", "video", "movie", "story", "writer", "drawing",
-    "color", "style", "beautiful", "imagine", "dream",
-    "inspire", "idea", "talent", "vision", "camera",
-    "animation", "character", "anime", "graphic", "editor",
+    "color", "beautiful", "imagine", "inspire", "talent",
+    "vision", "camera", "animation", "character", "anime",
+    "graphic",
 
-    // Everyday
     "house", "home", "door", "window", "table", "chair",
     "phone", "clock", "watch", "money", "friend", "family",
-    "people", "person", "child", "school", "office",
-    "market", "shop", "street", "city", "country",
-    "travel", "train", "plane", "road", "place", "food",
-    "coffee", "breakfast", "lunch", "dinner",
+    "people", "person", "child", "office", "market", "shop",
+    "street", "city", "country", "travel", "train", "plane",
+    "road", "place", "food", "coffee", "breakfast", "lunch",
+    "dinner",
 
-    // Nature
-    "tree", "grass", "leaf", "flower", "rain", "snow",
-    "wind", "storm", "thunder", "lightning", "fire",
-    "water", "lake", "sea", "beach", "island", "desert",
-    "forest", "animal", "bird", "dog", "cat", "horse",
+    "tree", "grass", "leaf", "rain", "snow", "wind", "storm",
+    "thunder", "fire", "lake", "sea", "beach", "island",
+    "desert", "animal", "bird", "dog", "cat", "horse",
     "tiger", "lion", "wolf", "fish", "butterfly",
 
-    // Positive / motivational
-    "strong", "brave", "happy", "peace", "success",
-    "progress", "effort", "energy", "power", "goal",
-    "winner", "better", "great", "amazing", "awesome",
-    "perfect", "believe", "achieve", "grow", "change",
-    "start", "finish", "never", "always", "forward",
-    "freedom", "hope", "smile", "enjoy", "confidence",
+    "strong", "brave", "happy", "peace", "success", "progress",
+    "effort", "energy", "goal", "better", "great", "amazing",
+    "awesome", "perfect", "believe", "achieve", "grow",
+    "change", "forward", "freedom", "hope", "smile", "enjoy",
+    "confidence",
 
-    // Useful typing words
-    "keyboard", "typing", "type", "focus", "flow", "speed",
-    "quick", "fast", "slow", "correct", "wrong", "level",
-    "target", "point", "score", "progress", "practice",
-    "accuracy", "reaction", "control", "movement", "pattern",
-    "random", "challenge", "master", "perfect", "combo",
+    "typing", "type", "quick", "fast", "slow", "correct",
+    "wrong", "target", "point", "accuracy", "reaction",
+    "control", "movement", "pattern", "random", "master",
+    "combo",
 
-    // Longer words
-    "adventure", "beautiful", "computer", "developer",
-    "javascript", "technology", "programming", "experience",
-    "important", "different", "something", "everything",
-    "knowledge", "imagination", "creativity", "motivation",
-    "communication", "information", "application",
-    "development", "performance", "environment",
-    "keyboard", "animation", "background", "community",
-    "education", "interesting", "successful", "challenge"
+    "adventure", "computer", "javascript", "technology",
+    "programming", "experience", "important", "different",
+    "something", "everything", "knowledge", "imagination",
+    "creativity", "motivation", "communication", "information",
+    "application", "development", "performance", "environment",
+    "background", "community", "education", "interesting",
+    "successful"
 ];
 
-
-/* =========================================================
-   PREVENT IMMEDIATE WORD REPETITION
-   ========================================================= */
-
 let lastWord = "";
+
+const MAX_VISIBLE_TARGETS = 7;
+const INITIAL_TARGETS = 4;
 
 
 /* =========================================================
@@ -658,9 +644,7 @@ let lastWord = "";
    ========================================================= */
 
 function randomNumber(min, max) {
-
     return Math.random() * (max - min) + min;
-
 }
 
 
@@ -670,14 +654,9 @@ function randomNumber(min, max) {
 
 function getRandomWord() {
 
-    if (words.length === 1) {
-        return words[0];
-    }
-
     let newWord;
 
     do {
-
         newWord =
             words[
                 Math.floor(
@@ -685,7 +664,10 @@ function getRandomWord() {
                 )
             ];
 
-    } while (newWord === lastWord);
+    } while (
+        words.length > 1 &&
+        newWord === lastWord
+    );
 
     lastWord = newWord;
 
@@ -694,13 +676,40 @@ function getRandomWord() {
 
 
 /* =========================================================
-   CREATE RANDOM TARGET
+   TARGET WIDTH
    ========================================================= */
 
-function createTarget() {
+function getTargetWidth(isWord, text) {
+
+    if (!isWord) {
+        return 55;
+    }
+
+    return Math.max(
+        80,
+        Math.min(
+            190,
+            text.length * 18 + 28
+        )
+    );
+}
+
+
+/* =========================================================
+   CREATE TARGET
+   ========================================================= */
+
+function createTarget(startY = -60) {
 
     if (!gameStarted || gamePaused) {
-        return;
+        return null;
+    }
+
+    if (
+        activeTargets.size >=
+        MAX_VISIBLE_TARGETS
+    ) {
+        return null;
     }
 
     const element =
@@ -709,28 +718,40 @@ function createTarget() {
     const isWord =
         Math.random() < 0.4;
 
+    const text =
+        isWord
+            ? getRandomWord()
+            : letters[
+                Math.floor(
+                    Math.random() *
+                    letters.length
+                )
+            ];
 
-    /* -----------------------------------------
-       WORD TARGET
-    ----------------------------------------- */
+    element.classList.add(
+        "game-item"
+    );
+
+    if (isWord) {
+        element.classList.add("word");
+    }
+
+    element.dataset.targetText =
+        text;
+
+    element.dataset.typedText =
+        "";
+
 
     if (isWord) {
 
-        targetText =
-            getRandomWord();
-
-        element.classList.add(
-            "game-item",
-            "word"
-        );
-
-
-        // Create individual letters
-        [...targetText].forEach(
+        [...text].forEach(
             (char, index) => {
 
                 const letter =
-                    document.createElement("span");
+                    document.createElement(
+                        "span"
+                    );
 
                 letter.className =
                     "target-letter";
@@ -744,33 +765,13 @@ function createTarget() {
                 element.appendChild(
                     letter
                 );
-
             }
         );
 
-    }
-
-
-    /* -----------------------------------------
-       SINGLE LETTER TARGET
-    ----------------------------------------- */
-
-    else {
-
-        targetText =
-            letters[
-                Math.floor(
-                    Math.random() *
-                    letters.length
-                )
-            ];
-
-        element.classList.add(
-            "game-item"
-        );
+    } else {
 
         element.textContent =
-            targetText;
+            text;
 
     }
 
@@ -783,7 +784,10 @@ function createTarget() {
         gameArea.clientWidth;
 
     const itemWidth =
-        isWord ? 110 : 55;
+        getTargetWidth(
+            isWord,
+            text
+        );
 
     const randomX =
         randomNumber(
@@ -796,38 +800,215 @@ function createTarget() {
             )
         );
 
-    const randomY = -60;
-
-
     element.style.left =
         `${randomX}px`;
 
     element.style.top =
-        `${randomY}px`;
-
+        `${startY}px`;
 
     gameArea.appendChild(
         element
     );
 
-
-    currentTarget =
-        element;
-
-    typedText = "";
-
-
-    /* -----------------------------------------
-       START FALLING
-    ----------------------------------------- */
-
-    animateTarget(
+    activeTargets.add(
         element
     );
 
+    animateTarget(
+        element,
+        gameSession
+    );
+
+    return element;
 }
 
+
 /* =========================================================
+   SPAWN TARGETS
+   ========================================================= */
+
+function scheduleNextTarget(
+    delay = spawnDelay
+) {
+
+    clearTimeout(
+        spawnTimer
+    );
+
+    spawnTimer =
+        setTimeout(
+            () => {
+
+                if (
+                    gameStarted &&
+                    !gamePaused &&
+                    activeTargets.size <
+                    MAX_VISIBLE_TARGETS
+                ) {
+
+                    createTarget();
+
+                }
+
+                if (gameStarted) {
+                    scheduleNextTarget();
+                }
+
+            },
+            delay
+        );
+}
+
+
+/* =========================================================
+   INITIAL TARGETS
+   ========================================================= */
+
+function createInitialTargets() {
+
+    const positions = [
+        -70,
+        -170,
+        -270,
+        -370
+    ];
+
+    positions.forEach(
+        (y, index) => {
+
+            setTimeout(
+                () => {
+
+                    if (
+                        gameStarted &&
+                        !gamePaused
+                    ) {
+
+                        createTarget(y);
+
+                    }
+
+                },
+                index * 180
+            );
+
+        }
+    );
+}
+
+
+/* =========================================================
+   TARGET ANIMATION
+   ========================================================= */
+
+function animateTarget(
+    element,
+    sessionId
+) {
+
+    let position =
+        parseFloat(
+            element.style.top
+        );
+
+    let lastTime =
+        performance.now();
+
+
+    function move(time) {
+
+        if (
+            !gameStarted ||
+            sessionId !== gameSession ||
+            !activeTargets.has(element)
+        ) {
+            return;
+        }
+
+
+        if (gamePaused) {
+
+            lastTime = time;
+
+            requestAnimationFrame(
+                move
+            );
+
+            return;
+        }
+
+
+        const delta =
+            (time - lastTime) / 1000;
+
+        lastTime = time;
+
+
+        position +=
+            currentFallSpeed *
+            delta;
+
+
+        element.style.top =
+            `${position}px`;
+
+
+        if (
+            position >
+            gameArea.clientHeight + 50
+        ) {
+
+            targetMissed(
+                element
+            );
+
+            return;
+        }
+
+
+        requestAnimationFrame(
+            move
+        );
+
+    }
+
+
+    requestAnimationFrame(
+        move
+    );
+}
+
+
+/* =========================================================
+   TARGET MISSED
+   ========================================================= */
+
+function targetMissed(element) {
+
+    if (!element) {
+        return;
+    }
+
+    activeTargets.delete(
+        element
+    );
+
+    if (
+        activeTypingTarget === element
+    ) {
+
+        activeTypingTarget = null;
+
+    }
+
+    if (element.parentNode) {
+        element.remove();
+    }
+
+    combo = 0;
+
+    updateStats();
+}/* =========================================================
    TARGET ANIMATION
    ========================================================= */
 
@@ -1167,8 +1348,6 @@ function endGame() {
     );
 
 }
-
-
 /* =========================================================
    KEYBOARD INPUT
    ========================================================= */
@@ -1192,14 +1371,6 @@ document.addEventListener(
             pauseGame();
 
             return;
-
-        }
-
-
-        if (
-            !currentTarget
-        ) {
-            return;
         }
 
 
@@ -1207,6 +1378,454 @@ document.addEventListener(
             event.key.toLowerCase();
 
 
+        if (
+            key.length !== 1 ||
+            !/[a-z]/.test(key)
+        ) {
+            return;
+        }
+
+
+        /* -----------------------------------------
+           CONTINUE CURRENT WORD
+        ----------------------------------------- */
+
+        if (activeTypingTarget) {
+
+            if (
+                !activeTargets.has(
+                    activeTypingTarget
+                )
+            ) {
+
+                activeTypingTarget =
+                    null;
+
+            } else {
+
+                if (
+                    activeTypingTarget
+                        .classList
+                        .contains("word")
+                ) {
+
+                    handleWordInput(
+                        key,
+                        activeTypingTarget
+                    );
+
+                } else {
+
+                    handleLetterInput(
+                        key,
+                        activeTypingTarget
+                    );
+
+                }
+
+                return;
+            }
+        }
+
+
+        /* -----------------------------------------
+           FIND NEW TARGET
+        ----------------------------------------- */
+
+        const target =
+            findMatchingTarget(key);
+
+
+        if (!target) {
+            return;
+        }
+
+
+        activeTypingTarget =
+            target;
+
+
+        if (
+            target.classList.contains(
+                "word"
+            )
+        ) {
+
+            handleWordInput(
+                key,
+                target
+            );
+
+        } else {
+
+            handleLetterInput(
+                key,
+                target
+            );
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   FIND MATCHING TARGET
+   ========================================================= */
+
+function findMatchingTarget(key) {
+
+    const matches = [];
+
+
+    activeTargets.forEach(
+        target => {
+
+            if (
+                !target ||
+                !target.isConnected
+            ) {
+                return;
+            }
+
+
+            const text =
+                target.dataset
+                    .targetText
+                    .toLowerCase();
+
+
+            const typed =
+                target.dataset
+                    .typedText || "";
+
+
+            if (typed.length > 0) {
+                return;
+            }
+
+
+            if (
+                text.startsWith(key)
+            ) {
+
+                matches.push(
+                    target
+                );
+
+            }
+
+        }
+    );
+
+
+    if (
+        matches.length === 0
+    ) {
+        return null;
+    }
+
+
+    /*
+       If several targets start with
+       the same letter, choose the
+       lowest target first.
+    */
+
+    matches.sort(
+        (a, b) =>
+            parseFloat(
+                a.style.top
+            ) -
+            parseFloat(
+                b.style.top
+            )
+    );
+
+
+    return matches[
+        matches.length - 1
+    ];
+}
+
+
+/* =========================================================
+   LETTER INPUT
+   ========================================================= */
+
+function handleLetterInput(
+    key,
+    target
+) {
+
+    if (
+        !target ||
+        !activeTargets.has(target)
+    ) {
+        return;
+    }
+
+
+    const targetValue =
+        target.dataset.targetText;
+
+
+    totalAttempts++;
+    totalCharacters++;
+
+
+    if (
+        key === targetValue
+    ) {
+
+        correctCharacters++;
+
+        score++;
+
+        combo++;
+
+
+        showCorrectEffect(
+            target
+        );
+
+
+        createCompletionBurst(
+            target
+        );
+
+
+        removeTarget(
+            target
+        );
+
+
+        activeTypingTarget =
+            null;
+
+
+        updateLevel();
+        updateStats();
+
+    } else {
+
+        combo = 0;
+
+        showWrongEffect(
+            target
+        );
+
+        updateStats();
+
+    }
+}
+
+
+/* =========================================================
+   WORD INPUT
+   ========================================================= */
+
+function handleWordInput(
+    key,
+    target
+) {
+
+    if (
+        !target ||
+        !activeTargets.has(target)
+    ) {
+        return;
+    }
+
+
+    const targetValue =
+        target.dataset.targetText;
+
+
+    let typed =
+        target.dataset.typedText ||
+        "";
+
+
+    totalAttempts++;
+    totalCharacters++;
+
+
+    const expectedCharacter =
+        targetValue[
+            typed.length
+        ];
+
+
+    /* -----------------------------------------
+       CORRECT LETTER
+    ----------------------------------------- */
+
+    if (
+        key === expectedCharacter
+    ) {
+
+        correctCharacters++;
+
+        typed += key;
+
+
+        target.dataset.typedText =
+            typed;
+
+
+        const targetLetters =
+            target.querySelectorAll(
+                ".target-letter"
+            );
+
+
+        const typedIndex =
+            typed.length - 1;
+
+
+        if (
+            targetLetters[typedIndex]
+        ) {
+
+            targetLetters[
+                typedIndex
+            ].classList.add(
+                "typed"
+            );
+
+
+            createSparkles(
+                targetLetters[
+                    typedIndex
+                ]
+            );
+
+        }
+
+
+        playTypingSound(true);
+
+
+        /* -----------------------------------------
+           WORD COMPLETE
+        ----------------------------------------- */
+
+        if (
+            typed.length >=
+            targetValue.length
+        ) {
+
+            score++;
+            combo++;
+
+
+            createCompletionBurst(
+                target
+            );
+
+
+            removeTarget(
+                target
+            );
+
+
+            activeTypingTarget =
+                null;
+
+
+            updateLevel();
+            updateStats();
+
+        } else {
+
+            updateStats();
+
+        }
+
+    }
+
+
+    /* -----------------------------------------
+       WRONG LETTER
+    ----------------------------------------- */
+
+    else {
+
+        combo = 0;
+
+        showWrongEffect(
+            target
+        );
+
+        updateStats();
+
+    }
+}
+
+
+/* =========================================================
+   REMOVE TARGET
+   ========================================================= */
+
+function removeTarget(target) {
+
+    if (
+        !target ||
+        !activeTargets.has(target)
+    ) {
+        return;
+    }
+
+
+    activeTargets.delete(
+        target
+    );
+
+
+    if (
+        activeTypingTarget === target
+    ) {
+
+        activeTypingTarget =
+            null;
+
+    }
+
+
+    if (target.parentNode) {
+        target.remove();
+    }
+}
+
+
+/* =========================================================
+   REMOVE ALL TARGETS
+   ========================================================= */
+
+function removeAllTargets() {
+
+    activeTargets.forEach(
+        target => {
+
+            if (
+                target &&
+                target.parentNode
+            ) {
+
+                target.remove();
+
+            }
+
+        }
+    );
+
+
+    activeTargets.clear();
+
+    activeTypingTarget =
+        null;
+}
         /* -----------------------------------------
            WORD TARGET
            ----------------------------------------- */
@@ -1422,27 +2041,30 @@ function removeCurrentTarget() {
     currentTarget = null;
 
 }
-
-
 /* =========================================================
    CORRECT EFFECT
    ========================================================= */
 
-function showCorrectEffect() {
+function showCorrectEffect(target) {
 
-    if (!currentTarget) {
+    if (!target) {
         return;
     }
 
-    currentTarget.classList.add("correct");
+
+    target.classList.add(
+        "correct"
+    );
+
 
     playTypingSound(true);
 
+
     setTimeout(() => {
 
-        if (currentTarget) {
+        if (target) {
 
-            currentTarget.classList.remove(
+            target.classList.remove(
                 "correct"
             );
 
@@ -1451,39 +2073,50 @@ function showCorrectEffect() {
     }, 180);
 }
 
+
 /* =========================================================
    WRONG EFFECT
    ========================================================= */
-function showWrongEffect() {
 
-    if (!currentTarget) {
+function showWrongEffect(target) {
+
+    if (!target) {
         return;
     }
 
-    currentTarget.classList.remove(
+
+    target.classList.remove(
         "shake",
         "wrong"
     );
 
-    void currentTarget.offsetWidth;
 
-    currentTarget.classList.add(
+    void target.offsetWidth;
+
+
+    target.classList.add(
         "shake",
         "wrong"
     );
+
 
     playTypingSound(false);
 
-    // Phone vibration
+
     if (navigator.vibrate) {
-        navigator.vibrate([35, 25, 35]);
+
+        navigator.vibrate(
+            [35, 25, 35]
+        );
+
     }
+
 
     setTimeout(() => {
 
-        if (currentTarget) {
+        if (target) {
 
-            currentTarget.classList.remove(
+            target.classList.remove(
                 "wrong"
             );
 
@@ -1494,193 +2127,175 @@ function showWrongEffect() {
 
 
 /* =========================================================
-   BURST EFFECT
+   NEW COMPLETION EFFECT
    ========================================================= */
 
-function createBurst(element) {
+function createCompletionBurst(
+    element
+) {
 
     if (!element) {
         return;
     }
 
-    const burst =
-        document.createElement("div");
-
-    burst.className = "burst";
-
-    burst.style.left =
-        element.offsetLeft +
-        element.offsetWidth / 2 +
-        "px";
-
-    burst.style.top =
-        element.offsetTop +
-        element.offsetHeight / 2 +
-        "px";
-
-    gameArea.appendChild(burst);
-
-    setTimeout(() => {
-        burst.remove();
-    }, 600);
-}
-/* =========================================================
-   TINY SPARKLES
-   ========================================================= */
-
-function createSparkles(element) {
-
-    if (!element) {
-        return;
-    }
 
     const rect =
         element.getBoundingClientRect();
 
+
     const areaRect =
         gameArea.getBoundingClientRect();
+
 
     const centerX =
         rect.left -
         areaRect.left +
         rect.width / 2;
 
-    const centerY =
-        rect.top -
-        areaRect.top +
-        rect.height / 2;
-
-    const sparkleCount = 5;
-
-    for (
-        let i = 0;
-        i < sparkleCount;
-        i++
-    ) {
-
-        const sparkle =
-            document.createElement("span");
-
-        sparkle.className =
-            "sparkle";
-
-        sparkle.style.left =
-            `${centerX}px`;
-
-        sparkle.style.top =
-            `${centerY}px`;
-
-        const angle =
-            Math.random() *
-            Math.PI * 2;
-
-        const distance =
-            12 +
-            Math.random() * 20;
-
-        sparkle.style.setProperty(
-            "--spark-x",
-            `${Math.cos(angle) * distance}px`
-        );
-
-        sparkle.style.setProperty(
-            "--spark-y",
-            `${Math.sin(angle) * distance}px`
-        );
-
-        sparkle.style.animationDelay =
-            `${Math.random() * 0.05}s`;
-
-        gameArea.appendChild(
-            sparkle
-        );
-
-        setTimeout(() => {
-            sparkle.remove();
-        }, 450);
-    }
-}
-
-
-/* =========================================================
-   WORD COMPLETION BURST
-   ========================================================= */
-
-function createCompletionBurst(element) {
-
-    if (!element) {
-        return;
-    }
-
-    // Main burst
-    createBurst(element);
-
-    // Extra sparkle explosion
-    const rect =
-        element.getBoundingClientRect();
-
-    const areaRect =
-        gameArea.getBoundingClientRect();
-
-    const centerX =
-        rect.left -
-        areaRect.left +
-        rect.width / 2;
 
     const centerY =
         rect.top -
         areaRect.top +
         rect.height / 2;
 
+
+    /* -----------------------------------------
+       EXPANDING RING
+    ----------------------------------------- */
+
+    const ring =
+        document.createElement(
+            "div"
+        );
+
+
+    ring.className =
+        "completion-ring";
+
+
+    ring.style.left =
+        `${centerX}px`;
+
+
+    ring.style.top =
+        `${centerY}px`;
+
+
+    gameArea.appendChild(
+        ring
+    );
+
+
+    /* -----------------------------------------
+       PARTICLES
+    ----------------------------------------- */
+
+    const particleCount =
+        element.classList.contains(
+            "word"
+        )
+            ? 28
+            : 14;
+
+
     for (
         let i = 0;
-        i < 18;
+        i < particleCount;
         i++
     ) {
 
-        const sparkle =
-            document.createElement("span");
+        const particle =
+            document.createElement(
+                "span"
+            );
 
-        sparkle.className =
-            "sparkle completion";
 
-        sparkle.style.left =
+        particle.className =
+            "completion-particle";
+
+
+        particle.style.left =
             `${centerX}px`;
 
-        sparkle.style.top =
+
+        particle.style.top =
             `${centerY}px`;
+
 
         const angle =
             Math.random() *
             Math.PI * 2;
 
-        const distance =
-            25 +
-            Math.random() * 45;
 
-        sparkle.style.setProperty(
-            "--spark-x",
+        const distance =
+            30 +
+            Math.random() * 65;
+
+
+        particle.style.setProperty(
+            "--particle-x",
             `${Math.cos(angle) * distance}px`
         );
 
-        sparkle.style.setProperty(
-            "--spark-y",
+
+        particle.style.setProperty(
+            "--particle-y",
             `${Math.sin(angle) * distance}px`
         );
 
-        sparkle.style.animationDelay =
+
+        particle.style.animationDelay =
             `${Math.random() * 0.08}s`;
 
+
         gameArea.appendChild(
-            sparkle
+            particle
         );
 
-        setTimeout(() => {
-            sparkle.remove();
-        }, 650);
-    }
-}
 
+        setTimeout(() => {
+
+            particle.remove();
+
+        }, 700);
+
+    }
+
+
+    /* -----------------------------------------
+       CENTER FLASH
+    ----------------------------------------- */
+
+    const flash =
+        document.createElement(
+            "div"
+        );
+
+
+    flash.className =
+        "completion-flash";
+
+
+    flash.style.left =
+        `${centerX}px`;
+
+
+    flash.style.top =
+        `${centerY}px`;
+
+
+    gameArea.appendChild(
+        flash
+    );
+
+
+    setTimeout(() => {
+
+        ring.remove();
+        flash.remove();
+
+    }, 650);
+}
 /* =========================================================
    LEVEL
    ========================================================= */
