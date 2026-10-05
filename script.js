@@ -563,34 +563,94 @@ document.addEventListener(
    RANDOM TARGET CONTENT
    ========================================================= */
 
-const letters =
-    "abcdefghijklmnopqrstuvwxyz";
-
+const letters = "abcdefghijklmnopqrstuvwxyz";
 
 const words = [
+    // General
+    "apple", "orange", "banana", "grape", "water", "cloud",
+    "river", "ocean", "mountain", "forest", "flower", "garden",
+    "summer", "winter", "spring", "autumn", "morning", "evening",
+    "night", "light", "shadow", "dream", "world", "space",
+    "planet", "star", "moon", "sun", "earth", "sky",
 
-    "code",
-    "flow",
-    "type",
-    "focus",
-    "speed",
-    "keyboard",
-    "computer",
-    "design",
-    "create",
-    "learn",
-    "dream",
-    "future",
-    "simple",
-    "practice",
-    "developer",
-    "javascript",
-    "website",
-    "coding",
-    "gaming",
-    "creative"
+    // Technology
+    "code", "coding", "program", "programmer", "developer",
+    "computer", "keyboard", "mouse", "screen", "website",
+    "internet", "browser", "server", "database", "software",
+    "hardware", "digital", "technology", "system", "network",
+    "javascript", "python", "html", "style", "function",
+    "variable", "object", "array", "string", "button",
+    "project", "editor", "github", "online", "mobile",
 
+    // Gaming
+    "game", "gaming", "player", "level", "score", "power",
+    "battle", "enemy", "mission", "quest", "world", "hero",
+    "action", "speed", "race", "drive", "truck", "car",
+    "fighter", "weapon", "boss", "victory", "challenge",
+    "adventure", "arcade", "console", "controller", "skill",
+    "winner", "start", "finish", "jump", "run",
+
+    // Learning
+    "learn", "study", "practice", "knowledge", "school",
+    "student", "teacher", "book", "lesson", "answer",
+    "question", "problem", "solution", "idea", "brain",
+    "memory", "focus", "attention", "smart", "skill",
+    "language", "science", "math", "history", "future",
+
+    // Creative
+    "create", "creative", "design", "artist", "picture",
+    "music", "video", "movie", "story", "writer", "drawing",
+    "color", "style", "beautiful", "imagine", "dream",
+    "inspire", "idea", "talent", "vision", "camera",
+    "animation", "character", "anime", "graphic", "editor",
+
+    // Everyday
+    "house", "home", "door", "window", "table", "chair",
+    "phone", "clock", "watch", "money", "friend", "family",
+    "people", "person", "child", "school", "office",
+    "market", "shop", "street", "city", "country",
+    "travel", "train", "plane", "road", "place", "food",
+    "coffee", "breakfast", "lunch", "dinner",
+
+    // Nature
+    "tree", "grass", "leaf", "flower", "rain", "snow",
+    "wind", "storm", "thunder", "lightning", "fire",
+    "water", "lake", "sea", "beach", "island", "desert",
+    "forest", "animal", "bird", "dog", "cat", "horse",
+    "tiger", "lion", "wolf", "fish", "butterfly",
+
+    // Positive / motivational
+    "strong", "brave", "happy", "peace", "success",
+    "progress", "effort", "energy", "power", "goal",
+    "winner", "better", "great", "amazing", "awesome",
+    "perfect", "believe", "achieve", "grow", "change",
+    "start", "finish", "never", "always", "forward",
+    "freedom", "hope", "smile", "enjoy", "confidence",
+
+    // Useful typing words
+    "keyboard", "typing", "type", "focus", "flow", "speed",
+    "quick", "fast", "slow", "correct", "wrong", "level",
+    "target", "point", "score", "progress", "practice",
+    "accuracy", "reaction", "control", "movement", "pattern",
+    "random", "challenge", "master", "perfect", "combo",
+
+    // Longer words
+    "adventure", "beautiful", "computer", "developer",
+    "javascript", "technology", "programming", "experience",
+    "important", "different", "something", "everything",
+    "knowledge", "imagination", "creativity", "motivation",
+    "communication", "information", "application",
+    "development", "performance", "environment",
+    "keyboard", "animation", "background", "community",
+    "education", "interesting", "successful", "challenge"
 ];
+
+
+/* =========================================================
+   PREVENT IMMEDIATE WORD REPETITION
+   ========================================================= */
+
+let lastWord = "";
 
 
 /* =========================================================
@@ -599,10 +659,37 @@ const words = [
 
 function randomNumber(min, max) {
 
-    return Math.random() *
-        (max - min) +
-        min;
+    return Math.random() * (max - min) + min;
 
+}
+
+
+/* =========================================================
+   GET RANDOM WORD
+   ========================================================= */
+
+function getRandomWord() {
+
+    if (words.length === 1) {
+        return words[0];
+    }
+
+    let newWord;
+
+    do {
+
+        newWord =
+            words[
+                Math.floor(
+                    Math.random() * words.length
+                )
+            ];
+
+    } while (newWord === lastWord);
+
+    lastWord = newWord;
+
+    return newWord;
 }
 
 
@@ -616,51 +703,77 @@ function createTarget() {
         return;
     }
 
-    const element = document.createElement("div");
+    const element =
+        document.createElement("div");
 
-    const isWord = Math.random() < 0.4;
+    const isWord =
+        Math.random() < 0.4;
+
+
+    /* -----------------------------------------
+       WORD TARGET
+    ----------------------------------------- */
 
     if (isWord) {
 
         targetText =
-            words[
-                Math.floor(
-                    Math.random() * words.length
-                )
-            ];
+            getRandomWord();
 
         element.classList.add(
             "game-item",
             "word"
         );
 
+
         // Create individual letters
-        [...targetText].forEach((char, index) => {
+        [...targetText].forEach(
+            (char, index) => {
 
-            const letter = document.createElement("span");
+                const letter =
+                    document.createElement("span");
 
-            letter.className = "target-letter";
-            letter.textContent = char;
+                letter.className =
+                    "target-letter";
 
-            letter.dataset.index = index;
+                letter.textContent =
+                    char;
 
-            element.appendChild(letter);
+                letter.dataset.index =
+                    index;
 
-        });
+                element.appendChild(
+                    letter
+                );
 
-    } else {
+            }
+        );
+
+    }
+
+
+    /* -----------------------------------------
+       SINGLE LETTER TARGET
+    ----------------------------------------- */
+
+    else {
 
         targetText =
             letters[
                 Math.floor(
-                    Math.random() * letters.length
+                    Math.random() *
+                    letters.length
                 )
             ];
 
-        element.classList.add("game-item");
+        element.classList.add(
+            "game-item"
+        );
 
-        element.textContent = targetText;
+        element.textContent =
+            targetText;
+
     }
+
 
     /* -----------------------------------------
        POSITION
@@ -677,11 +790,14 @@ function createTarget() {
             20,
             Math.max(
                 21,
-                areaWidth - itemWidth - 20
+                areaWidth -
+                itemWidth -
+                20
             )
         );
 
     const randomY = -60;
+
 
     element.style.left =
         `${randomX}px`;
@@ -689,17 +805,26 @@ function createTarget() {
     element.style.top =
         `${randomY}px`;
 
-    gameArea.appendChild(element);
 
-    currentTarget = element;
+    gameArea.appendChild(
+        element
+    );
+
+
+    currentTarget =
+        element;
 
     typedText = "";
+
 
     /* -----------------------------------------
        START FALLING
     ----------------------------------------- */
 
-    animateTarget(element);
+    animateTarget(
+        element
+    );
+
 }
 
 /* =========================================================
