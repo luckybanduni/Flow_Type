@@ -649,17 +649,88 @@ body {
         0 0 30px rgba(60, 220, 150, 0.25);
 }
 
-
 /* =========================================================
-   BURST
+   COMPLETION EFFECT
    ========================================================= */
 
-.burst {
+.completion-ring {
 
     position: absolute;
 
-    width: 12px;
-    height: 12px;
+    width: 18px;
+    height: 18px;
+
+    border-radius: 50%;
+
+    border: 2px solid rgba(
+        120,
+        255,
+        200,
+        0.95
+    );
+
+    transform:
+        translate(-50%, -50%)
+        scale(0.2);
+
+    pointer-events: none;
+
+    z-index: 28;
+
+    animation:
+        completion-ring 0.6s
+        cubic-bezier(
+            0.2,
+            0.8,
+            0.2,
+            1
+        )
+        forwards;
+}
+
+
+.completion-flash {
+
+    position: absolute;
+
+    width: 10px;
+    height: 10px;
+
+    border-radius: 50%;
+
+    background: #ffffff;
+
+    transform:
+        translate(-50%, -50%)
+        scale(0);
+
+    pointer-events: none;
+
+    z-index: 29;
+
+    box-shadow:
+        0 0 10px
+        rgba(255, 255, 255, 1),
+
+        0 0 24px
+        rgba(100, 255, 190, 0.9),
+
+        0 0 42px
+        rgba(130, 110, 255, 0.7);
+
+    animation:
+        completion-flash 0.35s
+        ease-out
+        forwards;
+}
+
+
+.completion-particle {
+
+    position: absolute;
+
+    width: 5px;
+    height: 5px;
 
     border-radius: 50%;
 
@@ -667,10 +738,116 @@ body {
 
     pointer-events: none;
 
-    z-index: 25;
+    z-index: 27;
+
+    box-shadow:
+        0 0 6px
+        rgba(255, 255, 255, 0.95),
+
+        0 0 12px
+        rgba(100, 255, 190, 0.8);
+
+    transform:
+        translate(-50%, -50%)
+        scale(1);
 
     animation:
-        burst 0.55s ease-out forwards;
+        completion-particle 0.65s
+        cubic-bezier(
+            0.15,
+            0.75,
+            0.25,
+            1
+        )
+        forwards;
+}
+
+
+/* =========================================================
+   COMPLETION ANIMATIONS
+   ========================================================= */
+
+@keyframes completion-ring {
+
+    0% {
+
+        transform:
+            translate(-50%, -50%)
+            scale(0.2);
+
+        opacity: 1;
+    }
+
+    60% {
+        opacity: 0.75;
+    }
+
+    100% {
+
+        transform:
+            translate(-50%, -50%)
+            scale(4.8);
+
+        opacity: 0;
+    }
+}
+
+
+@keyframes completion-flash {
+
+    0% {
+
+        transform:
+            translate(-50%, -50%)
+            scale(0);
+
+        opacity: 0;
+    }
+
+    25% {
+
+        transform:
+            translate(-50%, -50%)
+            scale(1.8);
+
+        opacity: 1;
+    }
+
+    100% {
+
+        transform:
+            translate(-50%, -50%)
+            scale(0.2);
+
+        opacity: 0;
+    }
+}
+
+
+@keyframes completion-particle {
+
+    0% {
+
+        transform:
+            translate(-50%, -50%)
+            translate(0, 0)
+            scale(1.2);
+
+        opacity: 1;
+    }
+
+    100% {
+
+        transform:
+            translate(-50%, -50%)
+            translate(
+                var(--particle-x),
+                var(--particle-y)
+            )
+            scale(0);
+
+        opacity: 0;
+    }
 }
 /* =========================================================
    TINY SPARKLES
@@ -1002,47 +1179,6 @@ body.bg-custom {
         transform: translateX(0);
     }
 }
-
-@keyframes burst {
-
-    0% {
-
-        transform:
-            translate(-50%, -50%)
-            scale(0.3);
-
-        opacity: 1;
-
-        box-shadow:
-            0 0 5px rgba(255, 255, 255, 0.9);
-    }
-
-    35% {
-
-        transform:
-            translate(-50%, -50%)
-            scale(2);
-
-        opacity: 0.9;
-
-        box-shadow:
-            0 0 20px rgba(90, 255, 180, 0.9),
-            0 0 40px rgba(120, 100, 255, 0.6);
-    }
-
-    100% {
-
-        transform:
-            translate(-50%, -50%)
-            scale(7);
-
-        opacity: 0;
-
-        box-shadow:
-            0 0 50px rgba(90, 255, 180, 0);
-    }
-}
-
 
 /* =========================================================
    RESPONSIVE
