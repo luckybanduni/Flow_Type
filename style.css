@@ -1,1886 +1,1281 @@
 /* =========================================================
-   FLOWTYPE — JAVASCRIPT
+   FLOWTYPE — STYLE
    ========================================================= */
 
-const gameArea = document.getElementById("gameArea");
-const welcome = document.getElementById("welcome");
-const startButton = document.getElementById("startButton");
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
-const scoreElement = document.getElementById("score");
-const levelElement = document.getElementById("level");
-const wpmElement = document.getElementById("wpm");
-const accuracyElement = document.getElementById("accuracy");
-const comboElement = document.getElementById("combo");
+html,
+body {
+    width: 100%;
+    height: 100%;
+}
 
-const gameControls = document.getElementById("gameControls");
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    color: #ffffff;
+    overflow: hidden;
 
-const pauseButton = document.getElementById("pauseButton");
-const restartButton = document.getElementById("restartButton");
+    background:
+        radial-gradient(
+            circle at top left,
+            #241b45 0%,
+            #111426 45%,
+            #070911 100%
+        );
 
-const pauseScreen = document.getElementById("pauseScreen");
-const resumeButton = document.getElementById("resumeButton");
-
-const resultsScreen = document.getElementById("resultsScreen");
-const playAgainButton = document.getElementById("playAgainButton");
-
-const finalScore = document.getElementById("finalScore");
-const finalWpm = document.getElementById("finalWpm");
-const finalAccuracy = document.getElementById("finalAccuracy");
-
-const musicToggle = document.getElementById("musicToggle");
-
-const backgroundToggle =
-    document.getElementById("backgroundToggle");
-
-const backgroundMenu =
-    document.getElementById("backgroundMenu");
-
-const backgroundUpload =
-    document.getElementById("backgroundUpload");
-
-const backgroundOptions =
-    document.querySelectorAll(".background-option");
-
-const speedOptions =
-    document.querySelectorAll(".speed-option");
-
-
-/* =========================================================
-   GAME SETTINGS
-   ========================================================= */
-
-const speedSettings = {
-
-    slow: {
-        fallSpeed: 35,
-        spawnDelay: 1500
-    },
-
-    easy: {
-        fallSpeed: 50,
-        spawnDelay: 1250
-    },
-
-    normal: {
-        fallSpeed: 70,
-        spawnDelay: 1050
-    },
-
-    fast: {
-        fallSpeed: 95,
-        spawnDelay: 850
-    },
-
-    "very-fast": {
-        fallSpeed: 125,
-        spawnDelay: 650
-    }
-
-};
-
-
-/* =========================================================
-   GAME VARIABLES
-   ========================================================= */
-
-let selectedSpeed = "slow";
-
-let currentFallSpeed =
-    speedSettings.slow.fallSpeed;
-
-let spawnDelay =
-    speedSettings.slow.spawnDelay;
-
-let gameStarted = false;
-let gamePaused = false;
-
-let score = 0;
-let combo = 0;
-let level = 1;
-
-let correctCharacters = 0;
-let totalCharacters = 0;
-let totalAttempts = 0;
-
-let startTime = 0;
-
-let animationFrame = null;
-let spawnTimer = null;
-
-
-/* =========================================================
-   MULTI-TARGET SYSTEM
-   ========================================================= */
-
-const activeTargets = new Set();
-
-let activeTypingTarget = null;
-
-let gameSession = 0;
-
-
-/* =========================================================
-   AUDIO
-   ========================================================= */
-
-let music = null;
-let musicPlaying = false;
-
-
-/* =========================================================
-   SPEED SELECTION
-   ========================================================= */
-
-speedOptions.forEach(button => {
-
-    button.addEventListener("click", () => {
-
-        const speed =
-            button.dataset.speed;
-
-        if (!speedSettings[speed]) {
-            return;
-        }
-
-        selectedSpeed = speed;
-
-        currentFallSpeed =
-            speedSettings[speed].fallSpeed;
-
-        spawnDelay =
-            speedSettings[speed].spawnDelay;
-
-        speedOptions.forEach(option => {
-
-            option.classList.remove("active");
-
-        });
-
-        button.classList.add("active");
-
-    });
-
-});
-
-
-/* =========================================================
-   MUSIC
-   ========================================================= */
-
-function setupMusic() {
-
-    if (!music) {
-
-        music = new Audio("music.mp3");
-
-        music.loop = true;
-
-        music.volume = 0.35;
-
-    }
-
+    transition:
+        background 0.5s ease,
+        background-image 0.5s ease;
 }
 
 
-function toggleMusic() {
+/* =========================================================
+   MAIN GAME
+   ========================================================= */
 
-    setupMusic();
+.game {
+    width: 100%;
+    height: 100vh;
 
-    if (!musicPlaying) {
+    display: flex;
+    flex-direction: column;
 
-        music.play()
-            .then(() => {
-
-                musicPlaying = true;
-
-                musicToggle.classList.add("active");
-
-                musicToggle.textContent = "🔊";
-
-            })
-            .catch(error => {
-
-                console.log(
-                    "Music could not start:",
-                    error
-                );
-
-            });
-
-    } else {
-
-        music.pause();
-
-        musicPlaying = false;
-
-        musicToggle.classList.remove("active");
-
-        musicToggle.textContent = "🎵";
-
-    }
-
+    position: relative;
 }
 
 
-musicToggle.addEventListener(
-    "click",
-    toggleMusic
-);
+/* =========================================================
+   TOP BAR
+   ========================================================= */
+
+.top-bar {
+    height: 72px;
+    min-height: 72px;
+
+    display: flex;
+    align-items: center;
+
+    padding: 0 28px;
+
+    position: relative;
+    z-index: 100;
+
+    background: rgba(8, 10, 20, 0.65);
+
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+}
+
+
+/* LOGO */
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+
+    font-size: 21px;
+    font-weight: 700;
+
+    white-space: nowrap;
+}
+
+.logo span {
+    font-size: 24px;
+}
+
+
+/* =========================================================
+   STATS
+   ========================================================= */
+
+.stats {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 28px;
+
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.stat {
+    min-width: 52px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    gap: 3px;
+}
+
+.stat span {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.55);
+
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.stat strong {
+    font-size: 16px;
+
+    color: #ffffff;
+}
+
+
+/* =========================================================
+   TOP RIGHT CONTROLS
+   ========================================================= */
+
+.top-controls {
+    margin-left: auto;
+
+    display: flex;
+    align-items: center;
+
+    gap: 9px;
+
+    position: relative;
+}
+
+
+/* MUSIC / BACKGROUND BUTTON */
+
+.icon-button {
+    width: 42px;
+    height: 42px;
+
+    border: 1px solid rgba(255, 255, 255, 0.12);
+
+    border-radius: 12px;
+
+    background: rgba(255, 255, 255, 0.06);
+
+    color: white;
+
+    font-size: 18px;
+
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    transition:
+        transform 0.2s ease,
+        background 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.icon-button:hover {
+    background: rgba(255, 255, 255, 0.12);
+
+    border-color: rgba(255, 255, 255, 0.25);
+
+    transform: translateY(-1px);
+}
+
+.icon-button.active {
+    background: rgba(126, 87, 255, 0.25);
+
+    border-color: rgba(150, 120, 255, 0.6);
+
+    box-shadow:
+        0 0 18px rgba(126, 87, 255, 0.25);
+}
 
 
 /* =========================================================
    BACKGROUND MENU
    ========================================================= */
 
-function closeBackgroundMenu() {
+.background-menu {
+    width: 210px;
 
-    if (!backgroundMenu) {
-        return;
-    }
+    position: absolute;
 
-    backgroundMenu.classList.remove("show");
+    top: 52px;
+    right: 0;
 
+    padding: 12px;
+
+    display: none;
+
+    flex-direction: column;
+
+    gap: 5px;
+
+    background: rgba(13, 16, 30, 0.96);
+
+    border: 1px solid rgba(255, 255, 255, 0.12);
+
+    border-radius: 15px;
+
+    box-shadow:
+        0 20px 50px rgba(0, 0, 0, 0.45);
+
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+
+    z-index: 1000;
+}
+
+.background-menu.open {
+    display: flex;
+}
+
+.background-title {
+    padding: 6px 9px 10px;
+
+    font-size: 11px;
+
+    color: rgba(255, 255, 255, 0.5);
+
+    text-transform: uppercase;
+
+    letter-spacing: 1px;
 }
 
 
-backgroundToggle.addEventListener(
-    "click",
-    event => {
+/* BACKGROUND OPTIONS */
 
-        event.stopPropagation();
+.background-option,
+.upload-background {
+    width: 100%;
 
-        backgroundMenu.classList.toggle("show");
+    padding: 10px 11px;
 
-    }
-);
+    border: none;
+
+    border-radius: 9px;
+
+    background: transparent;
+
+    color: #ffffff;
+
+    font-size: 13px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+
+    cursor: pointer;
+
+    text-align: left;
+
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
+}
+
+.background-option:hover,
+.upload-background:hover {
+    background: rgba(255, 255, 255, 0.08);
+
+    transform: translateX(2px);
+}
+
+.background-option.active {
+    background: rgba(126, 87, 255, 0.2);
+
+    box-shadow:
+        inset 2px 0 0 #987cff;
+}
+
+.upload-background {
+    margin-top: 4px;
+
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+
+    padding-top: 13px;
+}
 
 
 /* =========================================================
-   APPLY BACKGROUND
+   GAME AREA
    ========================================================= */
 
-function applyBackground(type) {
+#gameArea {
+    flex: 1;
 
-    document.body.classList.remove(
-        "bg-default",
-        "bg-sakura",
-        "bg-night",
-        "bg-dark",
-        "bg-custom"
+    position: relative;
+
+    overflow: hidden;
+
+    min-height: 0;
+
+    background: transparent;
+}
+
+
+/* =========================================================
+   WELCOME
+   ========================================================= */
+
+.welcome {
+    position: absolute;
+
+    top: 50%;
+    left: 50%;
+
+    transform: translate(-50%, -50%);
+
+    width: min(650px, 90%);
+
+    text-align: center;
+
+    z-index: 20;
+
+    pointer-events: auto;
+}
+
+.welcome-icon {
+    font-size: 48px;
+
+    margin-bottom: 10px;
+
+    filter:
+        drop-shadow(0 0 15px rgba(145, 110, 255, 0.5));
+}
+
+.welcome h1 {
+    font-size: clamp(34px, 5vw, 58px);
+
+    margin-bottom: 12px;
+
+    letter-spacing: -2px;
+}
+
+.welcome > p {
+    color: rgba(255, 255, 255, 0.58);
+
+    font-size: 15px;
+
+    line-height: 1.7;
+
+    margin-bottom: 25px;
+}
+
+
+/* =========================================================
+   SPEED
+   ========================================================= */
+
+.speed-section {
+    margin-bottom: 22px;
+}
+
+.speed-title {
+    font-size: 12px;
+
+    color: rgba(255, 255, 255, 0.5);
+
+    text-transform: uppercase;
+
+    letter-spacing: 1.5px;
+
+    margin-bottom: 12px;
+}
+
+.speed-options {
+    display: flex;
+
+    justify-content: center;
+
+    flex-wrap: wrap;
+
+    gap: 8px;
+}
+
+.speed-option {
+    min-width: 82px;
+
+    padding: 9px 12px;
+
+    border: 1px solid rgba(255, 255, 255, 0.1);
+
+    border-radius: 11px;
+
+    background: rgba(255, 255, 255, 0.05);
+
+    color: white;
+
+    cursor: pointer;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    gap: 4px;
+
+    font-size: 17px;
+
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.speed-option span {
+    font-size: 10px;
+
+    color: rgba(255, 255, 255, 0.65);
+}
+
+.speed-option:hover {
+    background: rgba(255, 255, 255, 0.1);
+
+    transform: translateY(-2px);
+}
+
+.speed-option.active {
+    background: rgba(126, 87, 255, 0.22);
+
+    border-color: rgba(150, 120, 255, 0.7);
+
+    box-shadow:
+        0 0 20px rgba(126, 87, 255, 0.18);
+}
+
+
+/* =========================================================
+   START BUTTON
+   ========================================================= */
+
+.start-button {
+    border: none;
+
+    padding: 13px 27px;
+
+    border-radius: 12px;
+
+    background: linear-gradient(
+        135deg,
+        #8f6cff,
+        #6250d9
     );
 
+    color: white;
 
-    if (type === "custom") {
+    font-size: 14px;
 
-        const customBackground =
-            localStorage.getItem(
-                "flowtypeCustomBackground"
-            );
+    font-weight: 700;
 
-        if (customBackground) {
+    cursor: pointer;
 
-            document.body.classList.add(
-                "bg-custom"
-            );
+    box-shadow:
+        0 10px 30px rgba(100, 75, 220, 0.3);
 
-            document.body.style.backgroundImage =
-                `url("${customBackground}")`;
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
 
-        }
+.start-button:hover {
+    transform: translateY(-2px);
 
-    } else {
+    box-shadow:
+        0 14px 35px rgba(100, 75, 220, 0.42);
+}
 
-        document.body.classList.add(
-            `bg-${type}`
-        );
-
-        document.body.style.backgroundImage = "";
-
-    }
-
-
-    backgroundOptions.forEach(option => {
-
-        option.classList.remove("active");
-
-        if (
-            option.dataset.background === type
-        ) {
-
-            option.classList.add("active");
-
-        }
-
-    });
-
+.start-button:active {
+    transform: translateY(0);
 }
 
 
 /* =========================================================
-   BACKGROUND OPTIONS
+   GAME CONTROLS
    ========================================================= */
 
-backgroundOptions.forEach(option => {
+.game-controls {
+    position: absolute;
 
-    option.addEventListener(
-        "click",
-        () => {
+    top: 18px;
+    right: 22px;
 
-            const background =
-                option.dataset.background;
+    display: none;
 
-            if (!background) {
-                return;
-            }
+    gap: 8px;
 
-            if (background === "custom") {
+    z-index: 30;
+}
 
-                if (backgroundUpload) {
+.game-controls.visible {
+    display: flex;
+}
 
-                    backgroundUpload.click();
+.game-controls button {
+    padding: 8px 12px;
 
-                }
+    border: 1px solid rgba(255, 255, 255, 0.12);
 
-                return;
+    border-radius: 9px;
 
-            }
+    background: rgba(10, 12, 23, 0.7);
 
-            applyBackground(background);
+    color: white;
 
-            localStorage.setItem(
-                "flowtypeBackground",
-                background
-            );
+    cursor: pointer;
 
-            closeBackgroundMenu();
+    backdrop-filter: blur(10px);
 
-        }
+    transition: background 0.2s ease;
+}
+
+.game-controls button:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+
+/* =========================================================
+   FALLING TARGETS
+   ========================================================= */
+
+.game-item {
+    position: absolute;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    min-width: 42px;
+    min-height: 42px;
+
+    padding: 8px 13px;
+
+    border-radius: 12px;
+
+    background: rgba(126, 87, 255, 0.13);
+
+    border: 1px solid rgba(165, 140, 255, 0.5);
+
+    color: #ffffff;
+
+    font-size: 18px;
+
+    font-weight: 700;
+
+    letter-spacing: 1px;
+
+    user-select: none;
+
+    pointer-events: none;
+
+    z-index: 10;
+
+    text-shadow:
+        0 0 12px rgba(255, 255, 255, 0.3);
+
+    box-shadow:
+        0 0 20px rgba(126, 87, 255, 0.13);
+
+    transition:
+        background 0.15s ease,
+        border-color 0.15s ease;
+}
+
+.game-item.word {
+    min-width: auto;
+
+    font-size: 16px;
+
+    letter-spacing: 0.5px;
+}
+/* =========================================================
+   INDIVIDUAL TYPED LETTER
+   ========================================================= */
+
+.target-letter {
+    display: inline-block;
+
+    color: #ffffff;
+
+    transition:
+        color 0.18s ease,
+        transform 0.18s ease,
+        text-shadow 0.18s ease;
+}
+
+
+/* CORRECTLY TYPED LETTER */
+
+.target-letter.typed {
+
+    color: #55f5a5;
+
+    text-shadow:
+        0 0 8px rgba(70, 255, 160, 0.8),
+        0 0 18px rgba(70, 255, 160, 0.45);
+
+    transform:
+        translateY(-1px)
+        scale(1.08);
+}
+
+/* WRONG INPUT */
+
+.game-item.shake {
+    animation: shake 0.25s ease;
+}
+
+.game-item.wrong {
+    background: rgba(255, 70, 90, 0.2);
+
+    border-color: rgba(255, 90, 100, 0.8);
+
+    box-shadow:
+        0 0 25px rgba(255, 70, 90, 0.25);
+}
+
+
+/* CORRECT INPUT */
+
+.game-item.correct {
+    background: rgba(60, 220, 150, 0.18);
+
+    border-color: rgba(80, 230, 160, 0.8);
+
+    box-shadow:
+        0 0 30px rgba(60, 220, 150, 0.25);
+}
+
+/* =========================================================
+   COMPLETION EFFECT
+   ========================================================= */
+
+.completion-ring {
+
+    position: absolute;
+
+    width: 18px;
+    height: 18px;
+
+    border-radius: 50%;
+
+    border: 2px solid rgba(
+        120,
+        255,
+        200,
+        0.95
     );
 
-});
-
-
-/* =========================================================
-   CUSTOM BACKGROUND UPLOAD
-   ========================================================= */
-
-backgroundUpload.addEventListener(
-    "change",
-    event => {
-
-        const files =
-            event.target.files;
-
-        if (
-            !files ||
-            !files.length
-        ) {
-            return;
-        }
-
-        const file = files[0];
-
-        if (
-            !file.type.startsWith("image/")
-        ) {
-
-            alert(
-                "Please select an image file."
-            );
-
-            return;
-
-        }
-
-        const reader =
-            new FileReader();
-
-        reader.onload = function(e) {
-
-            const imageData =
-                e.target.result;
-
-            try {
-
-                localStorage.setItem(
-                    "flowtypeCustomBackground",
-                    imageData
-                );
-
-            } catch (error) {
-
-                console.error(error);
-
-                alert(
-                    "This image is too large to save in the browser. Please choose a smaller image."
-                );
-
-                return;
-
-            }
-
-            document.body.classList.remove(
-                "bg-default",
-                "bg-sakura",
-                "bg-night",
-                "bg-dark"
-            );
-
-            document.body.classList.add(
-                "bg-custom"
-            );
-
-            document.body.style.backgroundImage =
-                `url("${imageData}")`;
-
-            localStorage.setItem(
-                "flowtypeBackground",
-                "custom"
-            );
-
-            backgroundOptions.forEach(option => {
-
-                option.classList.remove("active");
-
-            });
-
-            const customOption =
-                document.querySelector(
-                    '[data-background="custom"]'
-                );
-
-            if (customOption) {
-
-                customOption.classList.add("active");
-
-            }
-
-            closeBackgroundMenu();
-
-        };
-
-        reader.readAsDataURL(file);
-
-    }
-);
-
-
-/* =========================================================
-   LOAD SAVED BACKGROUND
-   ========================================================= */
-
-function loadSavedBackground() {
-
-    const savedBackground =
-        localStorage.getItem(
-            "flowtypeBackground"
-        );
-
-    if (savedBackground) {
-
-        applyBackground(
-            savedBackground
-        );
-
-    } else {
-
-        applyBackground(
-            "default"
-        );
-
-    }
-
-}
-
-
-loadSavedBackground();
-
-
-/* =========================================================
-   CLOSE BACKGROUND MENU OUTSIDE
-   ========================================================= */
-
-document.addEventListener(
-    "click",
-    event => {
-
-        if (
-            !backgroundMenu.contains(event.target) &&
-            event.target !== backgroundToggle
-        ) {
-
-            closeBackgroundMenu();
-
-        }
-
-    }
-);
-
-
-/* =========================================================
-   WORD / LETTER BANK
-   ========================================================= */
-
-const letters =
-    "abcdefghijklmnopqrstuvwxyz";
-
-const words = [
-
-    "apple",
-    "orange",
-    "banana",
-    "grape",
-    "water",
-    "cloud",
-    "river",
-    "ocean",
-    "mountain",
-    "forest",
-    "flower",
-    "garden",
-    "summer",
-    "winter",
-    "spring",
-    "autumn",
-    "morning",
-    "evening",
-    "night",
-    "light",
-    "shadow",
-    "dream",
-    "world",
-    "space",
-    "planet",
-    "star",
-    "moon",
-    "sun",
-    "earth",
-    "sky",
-
-    "code",
-    "coding",
-    "program",
-    "programmer",
-    "developer",
-    "computer",
-    "keyboard",
-    "mouse",
-    "screen",
-    "website",
-    "internet",
-    "browser",
-    "server",
-    "database",
-    "software",
-    "hardware",
-    "digital",
-    "technology",
-    "system",
-    "network",
-    "javascript",
-    "python",
-    "html",
-    "style",
-    "function",
-    "variable",
-    "object",
-    "array",
-    "string",
-    "button",
-    "project",
-    "editor",
-    "github",
-    "online",
-    "mobile",
-
-    "game",
-    "gaming",
-    "player",
-    "level",
-    "score",
-    "power",
-    "battle",
-    "enemy",
-    "mission",
-    "quest",
-    "hero",
-    "action",
-    "speed",
-    "race",
-    "drive",
-    "truck",
-    "car",
-    "fighter",
-    "boss",
-    "victory",
-    "challenge",
-    "adventure",
-    "arcade",
-
-    "book",
-    "school",
-    "college",
-    "student",
-    "teacher",
-    "learning",
-    "lesson",
-    "chapter",
-    "science",
-    "math",
-    "history",
-    "language",
-    "knowledge",
-    "answer",
-    "question",
-    "practice",
-    "future",
-    "career",
-    "skill",
-    "success",
-
-    "music",
-    "guitar",
-    "piano",
-    "song",
-    "sound",
-    "rhythm",
-    "melody",
-    "artist",
-    "creative",
-    "design",
-    "drawing",
-    "picture",
-    "camera",
-    "movie",
-    "anime",
-    "story",
-    "character",
-    "studio",
-    "video",
-    "creator",
-
-    "coffee",
-    "tea",
-    "bread",
-    "cake",
-    "pizza",
-    "burger",
-    "cookie",
-    "kitchen",
-    "house",
-    "window",
-    "door",
-    "table",
-    "chair",
-    "phone",
-    "clock",
-    "morning",
-    "family",
-    "friend",
-    "travel",
-    "journey",
-
-    "happy",
-    "smile",
-    "peace",
-    "calm",
-    "strong",
-    "brave",
-    "focus",
-    "energy",
-    "positive",
-    "freedom",
-    "hope",
-    "dream",
-    "goal",
-    "progress",
-    "winner",
-    "amazing",
-    "awesome",
-    "perfect",
-    "bright",
-    "future",
-
-    "animal",
-    "puppy",
-    "kitten",
-    "tiger",
-    "lion",
-    "horse",
-    "rabbit",
-    "panda",
-    "monkey",
-    "elephant",
-    "forest",
-    "rain",
-    "thunder",
-    "weather",
-    "sunshine",
-    "rainbow",
-    "nature",
-    "garden",
-    "tree",
-    "leaf",
-
-    "keyboard",
-    "typing",
-    "target",
-    "letter",
-    "word",
-    "player",
-    "correct",
-    "wrong",
-    "combo",
-    "accuracy",
-    "speed",
-    "practice",
-    "flow",
-    "focus",
-    "reaction",
-    "challenge",
-    "master",
-    "fast",
-    "quick",
-    "skill",
-
-    "beautiful",
-    "important",
-    "different",
-    "creative",
-    "computer",
-    "technology",
-    "experience",
-    "development",
-    "programming",
-    "application",
-    "information",
-    "communication",
-    "education",
-    "motivation",
-    "imagination",
-    "adventure",
-    "friendship",
-    "knowledge",
-    "opportunity",
-    "achievement"
-
-];
-
-
-const MAX_VISIBLE_TARGETS = 7;
-
-const INITIAL_TARGETS = 4;
-
-let lastWord = "";
-
-
-/* =========================================================
-   RANDOM HELPERS
-   ========================================================= */
-
-function randomNumber(
-    min,
-    max
-) {
-
-    return Math.random() *
-        (max - min) +
-        min;
-
-}
-
-
-function getRandomWord() {
-
-    let word;
-
-    do {
-
-        word =
-            words[
-                Math.floor(
-                    Math.random() *
-                    words.length
-                )
-            ];
-
-    } while (
-        words.length > 1 &&
-        word === lastWord
-    );
-
-    lastWord = word;
-
-    return word;
-
-}
-
-
-function getRandomLetter() {
-
-    return letters[
-        Math.floor(
-            Math.random() *
-            letters.length
+    transform:
+        translate(-50%, -50%)
+        scale(0.2);
+
+    pointer-events: none;
+
+    z-index: 28;
+
+    animation:
+        completion-ring 0.6s
+        cubic-bezier(
+            0.2,
+            0.8,
+            0.2,
+            1
         )
-    ];
-
+        forwards;
 }
 
 
-function getTargetWidth(
-    isWord,
-    text
-) {
+.completion-flash {
 
-    if (isWord) {
+    position: absolute;
 
-        return Math.max(
-            90,
-            text.length * 30
-        );
+    width: 10px;
+    height: 10px;
 
-    }
+    border-radius: 50%;
 
-    return 55;
+    background: #ffffff;
 
+    transform:
+        translate(-50%, -50%)
+        scale(0);
+
+    pointer-events: none;
+
+    z-index: 29;
+
+    box-shadow:
+        0 0 10px
+        rgba(255, 255, 255, 1),
+
+        0 0 24px
+        rgba(100, 255, 190, 0.9),
+
+        0 0 42px
+        rgba(130, 110, 255, 0.7);
+
+    animation:
+        completion-flash 0.35s
+        ease-out
+        forwards;
 }
 
 
-/* =========================================================
-   CREATE TARGET
-   ========================================================= */
+.completion-particle {
 
-function createTarget(
-    startY = -60
-) {
+    position: absolute;
 
-    if (
-        !gameStarted ||
-        gamePaused
-    ) {
-        return null;
-    }
+    width: 5px;
+    height: 5px;
 
-    if (
-        activeTargets.size >=
-        MAX_VISIBLE_TARGETS
-    ) {
-        return null;
-    }
+    border-radius: 50%;
 
+    background: #ffffff;
 
-    const isWord =
-        Math.random() < 0.40;
+    pointer-events: none;
 
-    const text =
-        isWord
-            ? getRandomWord()
-            : getRandomLetter();
+    z-index: 27;
 
+    box-shadow:
+        0 0 6px
+        rgba(255, 255, 255, 0.95),
 
-    const element =
-        document.createElement("div");
+        0 0 12px
+        rgba(100, 255, 190, 0.8);
 
-    element.classList.add(
-        "game-item"
-    );
+    transform:
+        translate(-50%, -50%)
+        scale(1);
 
-
-    if (isWord) {
-
-        element.classList.add(
-            "word"
-        );
-
-
-        [...text].forEach(
-            character => {
-
-                const span =
-                    document.createElement(
-                        "span"
-                    );
-
-                span.classList.add(
-                    "target-letter"
-                );
-
-                span.textContent =
-                    character;
-
-                element.appendChild(
-                    span
-                );
-
-            }
-        );
-
-    } else {
-
-        element.textContent =
-            text;
-
-    }
-
-
-    element.dataset.targetText =
-        text.toLowerCase();
-
-    element.dataset.typedText =
-        "";
-
-
-    const targetWidth =
-        getTargetWidth(
-            isWord,
-            text
-        );
-
-
-    element.style.width =
-        `${targetWidth}px`;
-
-
-    const areaWidth =
-        gameArea.clientWidth;
-
-    const maxLeft =
-        Math.max(
-            10,
-            areaWidth -
-            targetWidth -
-            10
-        );
-
-
-    element.style.left =
-        `${randomNumber(
-            10,
-            maxLeft
-        )}px`;
-
-
-    element.style.top =
-        `${startY}px`;
-
-
-    gameArea.appendChild(
-        element
-    );
-
-
-    activeTargets.add(
-        element
-    );
-
-
-    animateTarget(
-        element,
-        gameSession
-    );
-
-
-    return element;
-
+    animation:
+        completion-particle 0.65s
+        cubic-bezier(
+            0.15,
+            0.75,
+            0.25,
+            1
+        )
+        forwards;
 }
 
 
 /* =========================================================
-   INITIAL TARGETS
+   COMPLETION ANIMATIONS
    ========================================================= */
 
-function createInitialTargets() {
+@keyframes completion-ring {
 
-    const positions = [
-        -70,
-        -170,
-        -270,
-        -370
-    ];
+    0% {
+
+        transform:
+            translate(-50%, -50%)
+            scale(0.2);
+
+        opacity: 1;
+    }
+
+    60% {
+        opacity: 0.75;
+    }
+
+    100% {
+
+        transform:
+            translate(-50%, -50%)
+            scale(4.8);
+
+        opacity: 0;
+    }
+}
 
 
-    positions.forEach(
-        (position, index) => {
+@keyframes completion-flash {
 
-            setTimeout(
-                () => {
+    0% {
 
-                    if (
-                        gameStarted &&
-                        !gamePaused
-                    ) {
+        transform:
+            translate(-50%, -50%)
+            scale(0);
 
-                        createTarget(
-                            position
-                        );
+        opacity: 0;
+    }
 
-                    }
+    25% {
 
-                },
-                index * 180
-            );
+        transform:
+            translate(-50%, -50%)
+            scale(1.8);
 
-        }
-    );
+        opacity: 1;
+    }
 
+    100% {
+
+        transform:
+            translate(-50%, -50%)
+            scale(0.2);
+
+        opacity: 0;
+    }
+}
+
+
+@keyframes completion-particle {
+
+    0% {
+
+        transform:
+            translate(-50%, -50%)
+            translate(0, 0)
+            scale(1.2);
+
+        opacity: 1;
+    }
+
+    100% {
+
+        transform:
+            translate(-50%, -50%)
+            translate(
+                var(--particle-x),
+                var(--particle-y)
+            )
+            scale(0);
+
+        opacity: 0;
+    }
+}
+/* =========================================================
+   TINY SPARKLES
+   ========================================================= */
+
+.sparkle {
+
+    position: absolute;
+
+    width: 4px;
+    height: 4px;
+
+    border-radius: 50%;
+
+    background: #ffffff;
+
+    pointer-events: none;
+
+    z-index: 30;
+
+    box-shadow:
+        0 0 5px rgba(255, 255, 255, 0.95),
+        0 0 10px rgba(130, 255, 190, 0.75);
+
+    animation:
+        sparkle-fly 0.4s ease-out forwards;
+}
+
+
+.sparkle::after {
+
+    content: "";
+
+    position: absolute;
+
+    width: 2px;
+    height: 10px;
+
+    left: 1px;
+    top: -3px;
+
+    border-radius: 50%;
+
+    background: #ffffff;
+
+    opacity: 0.8;
+
+    transform: rotate(45deg);
 }
 
 
 /* =========================================================
-   TARGET SPAWNER
+   SPARKLE ANIMATION
    ========================================================= */
 
-function scheduleNextTarget(
-    delay = spawnDelay
-) {
+@keyframes sparkle-fly {
 
-    clearTimeout(
-        spawnTimer
-    );
+    0% {
 
+        transform:
+            translate(0, 0)
+            scale(1.2);
 
-    if (
-        !gameStarted ||
-        gamePaused
-    ) {
-        return;
+        opacity: 1;
     }
 
+    45% {
 
-    spawnTimer =
-        setTimeout(
-            () => {
+        opacity: 1;
+    }
 
-                if (
-                    !gameStarted ||
-                    gamePaused
-                ) {
-                    return;
-                }
+    100% {
+
+        transform:
+            translate(
+                var(--spark-x),
+                var(--spark-y)
+            )
+            scale(0);
+
+        opacity: 0;
+    }
+}
+
+/* =========================================================
+   PAUSE SCREEN
+   ========================================================= */
+
+.pause-screen,
+.results-screen {
+    position: absolute;
+
+    inset: 0;
+
+    display: none;
+
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(5, 7, 15, 0.72);
+
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+
+    z-index: 50;
+}
+
+.pause-screen.show,
+.results-screen.show {
+    display: flex;
+}
 
 
-                if (
-                    activeTargets.size <
-                    MAX_VISIBLE_TARGETS
-                ) {
+.pause-box,
+.results-box {
+    width: min(360px, 90%);
 
-                    createTarget();
+    padding: 32px;
 
-                }
+    border: 1px solid rgba(255, 255, 255, 0.12);
 
+    border-radius: 20px;
 
-                scheduleNextTarget(
-                    spawnDelay
-                );
+    background: rgba(15, 18, 33, 0.9);
 
-            },
-            delay
-        );
+    box-shadow:
+        0 25px 70px rgba(0, 0, 0, 0.45);
 
+    text-align: center;
+}
+
+.pause-icon {
+    font-size: 30px;
+
+    margin-bottom: 8px;
+}
+
+.pause-box h2,
+.results-box h2 {
+    font-size: 28px;
+
+    margin-bottom: 8px;
+}
+
+.pause-box p {
+    color: rgba(255, 255, 255, 0.55);
+
+    margin-bottom: 22px;
+}
+
+.pause-box button,
+.results-box button {
+    border: none;
+
+    padding: 11px 20px;
+
+    border-radius: 10px;
+
+    background: #7960e9;
+
+    color: white;
+
+    cursor: pointer;
+
+    font-weight: 700;
+}
+
+.pause-box button:hover,
+.results-box button:hover {
+    background: #8c72f4;
 }
 
 
 /* =========================================================
-   TARGET ANIMATION
+   RESULTS
    ========================================================= */
 
-function animateTarget(
-    element,
-    sessionId
-) {
+.result-row {
+    display: flex;
 
-    let position =
-        parseFloat(
-            element.style.top
-        ) || -60;
+    justify-content: space-between;
 
+    padding: 12px 0;
 
-    let lastTime =
-        performance.now();
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
 
+.result-row span {
+    color: rgba(255, 255, 255, 0.55);
+}
 
-    function move(time) {
+.result-row strong {
+    color: white;
+}
 
-        if (
-            !gameStarted ||
-            sessionId !== gameSession ||
-            !activeTargets.has(element)
-        ) {
-
-            return;
-
-        }
-
-
-        if (gamePaused) {
-
-            lastTime = time;
-
-            requestAnimationFrame(
-                move
-            );
-
-            return;
-
-        }
-
-
-        const delta =
-            (time - lastTime) /
-            1000;
-
-        lastTime = time;
-
-
-        position +=
-            currentFallSpeed *
-            delta;
-
-
-        element.style.top =
-            `${position}px`;
-
-
-        if (
-            position >
-            gameArea.clientHeight + 50
-        ) {
-
-            targetMissed(
-                element
-            );
-
-            return;
-
-        }
-
-
-        requestAnimationFrame(
-            move
-        );
-
-    }
-
-
-    requestAnimationFrame(
-        move
-    );
-
+.results-box button {
+    margin-top: 22px;
 }
 
 
 /* =========================================================
-   MISSED TARGET
+   FOOTER
    ========================================================= */
 
-function targetMissed(
-    element
-) {
+footer {
+    height: 42px;
+    min-height: 42px;
 
-    if (
-        !element ||
-        !activeTargets.has(element)
-    ) {
-        return;
-    }
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
+    gap: 10px;
 
-    activeTargets.delete(
-        element
-    );
+    font-size: 11px;
 
+    color: rgba(255, 255, 255, 0.4);
 
-    if (
-        activeTypingTarget ===
-        element
-    ) {
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
 
-        activeTypingTarget =
-            null;
+    background: rgba(7, 9, 16, 0.45);
 
-    }
+    position: relative;
 
-
-    if (
-        element.parentNode
-    ) {
-
-        element.remove();
-
-    }
-
-
-    combo = 0;
-
-    updateStats();
-
+    z-index: 80;
 }
-   function startGame() {
-    gameStarted = true;
-    gamePaused = false;
-    gameOver = false;
 
-    gameSession++;
+footer a {
+    color: rgba(190, 175, 255, 0.8);
 
-    score = 0;
-    combo = 0;
-    correctCharacters = 0;
-    totalCharacters = 0;
-    missedTargets = 0;
+    text-decoration: none;
+}
 
-    activeTypingTarget = null;
-    removeAllTargets();
+footer a:hover {
+    color: #ffffff;
+}
 
-    clearTimeout(spawnTimer);
-
-    updateStats();
-    updateLevel();
-
-    startScreen.classList.add("hidden");
-    resultsScreen.classList.add("hidden");
-    gameScreen.classList.remove("hidden");
-
-    pauseButton.textContent = "Pause";
-
-    createInitialTargets();
-    scheduleNextTarget(spawnDelay);
-
-    if (musicEnabled) {
-        music.play().catch(() => {});
-    }
+.footer-divider {
+    opacity: 0.4;
 }
 
 
-function pauseGame() {
-    if (!gameStarted || gameOver) return;
+/* =========================================================
+   BACKGROUND THEMES
+   ========================================================= */
 
-    gamePaused = !gamePaused;
-
-    if (gamePaused) {
-        pauseButton.textContent = "Resume";
-        pauseOverlay.classList.remove("hidden");
-
-        if (musicEnabled) {
-            music.pause();
-        }
-    } else {
-        pauseButton.textContent = "Pause";
-        pauseOverlay.classList.add("hidden");
-
-        if (musicEnabled) {
-            music.play().catch(() => {});
-        }
-    }
-}
-
-
-function restartGame() {
-    clearTimeout(spawnTimer);
-
-    gameSession++;
-
-    removeAllTargets();
-
-    gameStarted = false;
-    gamePaused = false;
-    gameOver = false;
-
-    activeTypingTarget = null;
-
-    score = 0;
-    combo = 0;
-    correctCharacters = 0;
-    totalCharacters = 0;
-    missedTargets = 0;
-
-    updateStats();
-    updateLevel();
-
-    pauseOverlay.classList.add("hidden");
-    resultsScreen.classList.add("hidden");
-    gameScreen.classList.remove("hidden");
-
-    startGame();
-}
-
-
-function endGame() {
-    gameStarted = false;
-    gamePaused = false;
-    gameOver = true;
-
-    gameSession++;
-
-    clearTimeout(spawnTimer);
-
-    activeTypingTarget = null;
-
-    if (musicEnabled) {
-        music.pause();
-    }
-
-    finalScore.textContent = score;
-    finalAccuracy.textContent = getAccuracy() + "%";
-    finalCombo.textContent = combo;
-
-    gameScreen.classList.add("hidden");
-    resultsScreen.classList.remove("hidden");
-
-    pauseOverlay.classList.add("hidden");
-}
-
-
-function getAccuracy() {
-    if (totalCharacters <= 0) {
-        return 100;
-    }
-
-    return Math.round((correctCharacters / totalCharacters) * 100);
-}
-
-
-function updateStats() {
-    if (scoreElement) {
-        scoreElement.textContent = score;
-    }
-
-    if (comboElement) {
-        comboElement.textContent = combo;
-    }
-
-    if (accuracyElement) {
-        accuracyElement.textContent = getAccuracy() + "%";
-    }
-
-    if (missedElement) {
-        missedElement.textContent = missedTargets;
-    }
-}
-
-
-function updateLevel() {
-    const newLevel = Math.floor(score / 100) + 1;
-
-    if (newLevel !== level) {
-        level = newLevel;
-
-        if (levelElement) {
-            levelElement.textContent = level;
-        }
-
-        currentFallSpeed = baseFallSpeed + ((level - 1) * speedIncrease);
-    } else {
-        if (levelElement) {
-            levelElement.textContent = level;
-        }
-    }
-}
-
-
-function showCorrectEffect(target) {
-    if (!target) return;
-
-    target.classList.remove("wrong");
-    target.classList.add("correct");
-
-    setTimeout(() => {
-        if (target && target.isConnected) {
-            target.classList.remove("correct");
-        }
-    }, 250);
-}
-
-
-function showWrongEffect(target) {
-    if (!target) return;
-
-    target.classList.remove("correct");
-    target.classList.add("shake", "wrong");
-
-    playTypingSound(false);
-
-    if (navigator.vibrate) {
-        navigator.vibrate([35, 25, 35]);
-    }
-
-    setTimeout(() => {
-        if (target && target.isConnected) {
-            target.classList.remove("shake", "wrong");
-        }
-    }, 350);
-}
-
-
-function createCompletionBurst(element) {
-    if (!element) return;
-
-    const rect = element.getBoundingClientRect();
-    const gameRect = gameArea.getBoundingClientRect();
-
-    const centerX =
-        rect.left - gameRect.left + rect.width / 2;
-
-    const centerY =
-        rect.top - gameRect.top + rect.height / 2;
-
-    const burst = document.createElement("div");
-    burst.className = "completion-burst";
-
-    burst.style.left = `${centerX}px`;
-    burst.style.top = `${centerY}px`;
-
-    const isWord = element.classList.contains("word");
-    const particleCount = isWord ? 28 : 14;
-
-    const ring = document.createElement("div");
-    ring.className = "completion-ring";
-    burst.appendChild(ring);
-
-    const flash = document.createElement("div");
-    flash.className = "completion-flash";
-    burst.appendChild(flash);
-
-    for (let i = 0; i < particleCount; i++) {
-        const particle = document.createElement("span");
-        particle.className = "completion-particle";
-
-        const angle =
-            (Math.PI * 2 * i) / particleCount;
-
-        const distance =
-            45 + Math.random() * 65;
-
-        const x =
-            Math.cos(angle) * distance;
-
-        const y =
-            Math.sin(angle) * distance;
-
-        particle.style.setProperty(
-            "--particle-x",
-            `${x}px`
+body.bg-default {
+    background:
+        radial-gradient(
+            circle at top left,
+            #241b45 0%,
+            #111426 45%,
+            #070911 100%
         );
+}
 
-        particle.style.setProperty(
-            "--particle-y",
-            `${y}px`
+body.bg-sakura {
+    background:
+        radial-gradient(
+            circle at 20% 20%,
+            rgba(255, 135, 185, 0.25),
+            transparent 35%
+        ),
+        radial-gradient(
+            circle at 80% 70%,
+            rgba(150, 100, 255, 0.2),
+            transparent 35%
+        ),
+        linear-gradient(
+            135deg,
+            #251526,
+            #151426,
+            #090b15
         );
-
-        burst.appendChild(particle);
-    }
-
-    gameArea.appendChild(burst);
-
-    setTimeout(() => {
-        burst.remove();
-    }, 700);
 }
 
-
-function createSparkles(element) {
-    if (!element) return;
-
-    const rect = element.getBoundingClientRect();
-    const gameRect = gameArea.getBoundingClientRect();
-
-    const centerX =
-        rect.left - gameRect.left + rect.width / 2;
-
-    const centerY =
-        rect.top - gameRect.top + rect.height / 2;
-
-    const sparkleContainer = document.createElement("div");
-    sparkleContainer.className = "typing-sparkles";
-
-    sparkleContainer.style.left = `${centerX}px`;
-    sparkleContainer.style.top = `${centerY}px`;
-
-    for (let i = 0; i < 4; i++) {
-        const sparkle = document.createElement("span");
-
-        sparkle.className = "typing-sparkle";
-
-        const angle =
-            Math.random() * Math.PI * 2;
-
-        const distance =
-            10 + Math.random() * 20;
-
-        sparkle.style.setProperty(
-            "--sparkle-x",
-            `${Math.cos(angle) * distance}px`
+body.bg-night {
+    background:
+        radial-gradient(
+            circle at 70% 20%,
+            rgba(70, 110, 220, 0.2),
+            transparent 35%
+        ),
+        linear-gradient(
+            135deg,
+            #071328,
+            #0a1020,
+            #03060d
         );
+}
 
-        sparkle.style.setProperty(
-            "--sparkle-y",
-            `${Math.sin(angle) * distance}px`
-        );
+body.bg-dark {
+    background: #05060a;
+}
 
-        sparkleContainer.appendChild(sparkle);
-    }
+body.bg-custom {
+    background-size: cover;
 
-    gameArea.appendChild(sparkleContainer);
+    background-position: center;
 
-    setTimeout(() => {
-        sparkleContainer.remove();
-    }, 500);
+    background-repeat: no-repeat;
+
+    background-attachment: fixed;
 }
 
 
-function playTypingSound(correct) {
-    if (!soundEnabled) return;
+/* =========================================================
+   ANIMATIONS
+   ========================================================= */
 
-    try {
-        const AudioContext =
-            window.AudioContext ||
-            window.webkitAudioContext;
+@keyframes shake {
+    0% {
+        transform: translateX(0);
+    }
 
-        if (!AudioContext) return;
+    25% {
+        transform: translateX(-6px);
+    }
 
-        const context = new AudioContext();
+    50% {
+        transform: translateX(6px);
+    }
 
-        const oscillator =
-            context.createOscillator();
+    75% {
+        transform: translateX(-4px);
+    }
 
-        const gain =
-            context.createGain();
-
-        oscillator.connect(gain);
-        gain.connect(context.destination);
-
-        oscillator.type = "sine";
-
-        oscillator.frequency.value =
-            correct ? 620 : 170;
-
-        gain.gain.setValueAtTime(
-            0.0001,
-            context.currentTime
-        );
-
-        gain.gain.exponentialRampToValueAtTime(
-            0.045,
-            context.currentTime + 0.01
-        );
-
-        gain.gain.exponentialRampToValueAtTime(
-            0.0001,
-            context.currentTime + 0.08
-        );
-
-        oscillator.start();
-
-        oscillator.stop(
-            context.currentTime + 0.09
-        );
-
-        setTimeout(() => {
-            context.close().catch(() => {});
-        }, 150);
-    } catch (error) {
-        // Audio is optional, so ignore browser audio errors.
+    100% {
+        transform: translateX(0);
     }
 }
 
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
 
-function findMatchingTarget(key) {
-    const matches = [];
+@media (max-width: 850px) {
 
-    activeTargets.forEach(target => {
-        if (!target || !target.isConnected) {
-            return;
-        }
-
-        const text =
-            (target.dataset.targetText || "").toLowerCase();
-
-        const typed =
-            (target.dataset.typedText || "").toLowerCase();
-
-        if (!text) {
-            return;
-        }
-
-        if (target.classList.contains("word")) {
-            if (typed.length > 0) {
-                return;
-            }
-        }
-
-        if (text.startsWith(key)) {
-            const top =
-                parseFloat(target.style.top) || 0;
-
-            matches.push({
-                target,
-                top
-            });
-        }
-    });
-
-    if (matches.length === 0) {
-        return null;
+    .top-bar {
+        padding: 0 15px;
     }
 
-    matches.sort((a, b) => a.top - b.top);
-
-    return matches[matches.length - 1].target;
-}
-
-
-function handleLetterInput(key, target) {
-    if (!target || !activeTargets.has(target)) {
-        return;
+    .stats {
+        gap: 12px;
     }
 
-    const expected =
-        (target.dataset.targetText || "").toLowerCase();
-
-    totalCharacters++;
-
-    if (key === expected) {
-        correctCharacters++;
-        score += 10;
-        combo++;
-
-        showCorrectEffect(target);
-        createCompletionBurst(target);
-        playTypingSound(true);
-
-        removeTarget(target);
-
-        updateStats();
-        updateLevel();
-
-        return;
+    .stat {
+        min-width: 40px;
     }
 
-    combo = 0;
-
-    showWrongEffect(target);
-
-    updateStats();
-}
-
-
-function handleWordInput(key, target) {
-    if (!target || !activeTargets.has(target)) {
-        return;
+    .stat span {
+        font-size: 8px;
     }
 
-    const word =
-        (target.dataset.targetText || "").toLowerCase();
-
-    let typed =
-        (target.dataset.typedText || "").toLowerCase();
-
-    const expected =
-        word.charAt(typed.length);
-
-    totalCharacters++;
-
-    if (key === expected) {
-        typed += key;
-
-        target.dataset.typedText = typed;
-
-        correctCharacters++;
-        combo++;
-
-        const letterIndex = typed.length - 1;
-
-        const letterSpans =
-            target.querySelectorAll(".target-letter");
-
-        if (letterSpans[letterIndex]) {
-            letterSpans[letterIndex].classList.add("typed");
-        }
-
-        createSparkles(target);
-        showCorrectEffect(target);
-        playTypingSound(true);
-
-        if (typed.length >= word.length) {
-            score += word.length * 10;
-
-            createCompletionBurst(target);
-
-            removeTarget(target);
-
-            activeTypingTarget = null;
-
-            updateStats();
-            updateLevel();
-
-            return;
-        }
-
-        updateStats();
-        return;
+    .stat strong {
+        font-size: 13px;
     }
 
-    combo = 0;
-
-    showWrongEffect(target);
-
-    updateStats();
-}
-
-
-function removeTarget(target) {
-    if (!target) return;
-
-    activeTargets.delete(target);
-
-    if (activeTypingTarget === target) {
-        activeTypingTarget = null;
+    .logo {
+        font-size: 17px;
     }
 
-    if (target.isConnected) {
-        target.remove();
+    .logo span {
+        font-size: 20px;
     }
 }
 
 
-function removeAllTargets() {
-    activeTargets.forEach(target => {
-        if (target && target.isConnected) {
-            target.remove();
-        }
-    });
+@media (max-width: 650px) {
 
-    activeTargets.clear();
+    .top-bar {
+        height: 64px;
+        min-height: 64px;
+    }
 
-    activeTypingTarget = null;
+    .stats {
+        display: none;
+    }
 
-    const remaining =
-        gameArea.querySelectorAll(".game-item");
+    .top-controls {
+        margin-left: auto;
+    }
 
-    remaining.forEach(element => {
-        element.remove();
-    });
+    .welcome {
+        width: 94%;
+    }
+
+    .welcome h1 {
+        font-size: 38px;
+    }
+
+    .speed-options {
+        gap: 6px;
+    }
+
+    .speed-option {
+        min-width: 68px;
+
+        padding: 8px 7px;
+    }
+
+    .game-controls {
+        top: 12px;
+        right: 12px;
+    }
+
+    .game-controls button {
+        font-size: 11px;
+        padding: 7px 9px;
+    }
+
+    footer {
+        font-size: 9px;
+    }
 }
 
 
-document.addEventListener("keydown", event => {
-    if (!gameStarted || gamePaused) {
-        return;
+@media (max-width: 420px) {
+
+    .background-menu {
+        right: -5px;
     }
 
-    if (event.key === "Escape") {
-        pauseGame();
-        return;
+    .speed-option {
+        min-width: 62px;
     }
 
-    const key = event.key.toLowerCase();
-
-    if (
-        key.length !== 1 ||
-        !/[a-z]/.test(key)
-    ) {
-        return;
+    .speed-option span {
+        font-size: 9px;
     }
-
-    /*
-     * If the player is already typing a word,
-     * keep that word selected until it is finished.
-     */
-    if (activeTypingTarget) {
-        if (!activeTargets.has(activeTypingTarget)) {
-            activeTypingTarget = null;
-        } else {
-            if (
-                activeTypingTarget.classList.contains("word")
-            ) {
-                handleWordInput(
-                    key,
-                    activeTypingTarget
-                );
-            } else {
-                handleLetterInput(
-                    key,
-                    activeTypingTarget
-                );
-            }
-
-            return;
-        }
-    }
-
-    /*
-     * No target is currently selected.
-     * Find the closest/lower visible target
-     * beginning with the pressed key.
-     */
-    const target = findMatchingTarget(key);
-
-    if (!target) {
-        return;
-    }
-
-    activeTypingTarget = target;
-
-    if (target.classList.contains("word")) {
-        handleWordInput(key, target);
-    } else {
-        handleLetterInput(key, target);
-    }
-});
-
-
-if (startButton) {
-    startButton.addEventListener(
-        "click",
-        startGame
-    );
 }
-
-
-if (pauseButton) {
-    pauseButton.addEventListener(
-        "click",
-        pauseGame
-    );
-}
-
-
-if (restartButton) {
-    restartButton.addEventListener(
-        "click",
-        restartGame
-    );
-}
-
-
-if (playAgainButton) {
-    playAgainButton.addEventListener(
-        "click",
-        restartGame
-    );
-}
-
-
-document.addEventListener("visibilitychange", () => {
-    if (
-        document.hidden &&
-        gameStarted &&
-        !gamePaused
-    ) {
-        pauseGame();
-    }
-});
-
-
-window.addEventListener("blur", () => {
-    if (
-        gameStarted &&
-        !gamePaused
-    ) {
-        pauseGame();
-    }
-});
-
-
-updateStats();
-updateLevel();
