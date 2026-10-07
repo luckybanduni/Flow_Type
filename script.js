@@ -1216,3 +1216,671 @@ function targetMissed(
     updateStats();
 
 }
+function startGame() {
+    gameStarted = true;
+    gamePaused = false;
+    gameOver = false;
+
+    gameSession++;
+
+    score = 0;
+    combo = 0;
+    correctCharacters = 0;
+    totalCharacters = 0;
+    missedTargets = 0;
+
+    activeTypingTarget = null;
+    removeAllTargets();
+
+    clearTimeout(spawnTimer);
+
+    updateStats();
+    updateLevel();
+
+    startScreen.classList.add("hidden");
+    resultsScreen.classList.add("hidden");
+    gameScreen.classList.remove("hidden");
+
+    pauseButton.textContent = "Pause";
+
+    createInitialTargets();
+    scheduleNextTarget(spawnDelay);
+
+    if (musicEnabled) {
+        music.play().catch(() => {});
+    }
+}
+
+
+function pauseGame() {
+    if (!gameStarted || gameOver) return;
+
+    gamePaused = !gamePaused;
+
+    if (gamePaused) {
+        pauseButton.textContent = "Resume";
+        pauseOverlay.classList.remove("hidden");
+
+        if (musicEnabled) {
+            music.pause();
+        }
+    } else {
+        pauseButton.textContent = "Pause";
+        pauseOverlay.classList.add("hidden");
+
+        if (musicEnabled) {
+            music.play().catch(() => {});
+        }
+    }
+}
+
+
+function restartGame() {
+    clearTimeout(spawnTimer);
+
+    gameSession++;
+
+    removeAllTargets();
+
+    gameStarted = false;
+    gamePaused = false;
+    gameOver = false;
+
+    activeTypingTarget = null;
+
+    score = 0;
+    combo = 0;
+    correctCharacters = 0;
+    totalCharacters = 0;
+    missedTargets = 0;
+
+    updateStats();
+    updateLevel();
+
+    pauseOverlay.classList.add("hidden");
+    resultsScreen.classList.add("hidden");
+    gameScreen.classList.remove("hidden");
+
+    startGame();
+}
+
+
+function endGame() {
+    gameStarted = false;
+    gamePaused = false;
+    gameOver = true;
+
+    gameSession++;
+
+    clearTimeout(spawnTimer);
+
+    activeTypingTarget = null;
+
+    if (musicEnabled) {
+        music.pause();
+    }
+
+    finalScore.textContent = score;
+    finalAccuracy.textContent = getAccuracy() + "%";
+    finalCombo.textContent = combo;
+
+    gameScreen.classList.add("hidden");
+    resultsScreen.classList.remove("hidden");
+
+    pauseOverlay.classList.add("hidden");
+}
+
+
+function getAccuracy() {
+    if (totalCharacters <= 0) {
+        return 100;
+    }
+
+    return Math.round((correctCharacters / totalCharacters) * 100);
+}
+
+
+function updateStats() {
+    if (scoreElement) {
+        scoreElement.textContent = score;
+    }
+
+    if (comboElement) {
+        comboElement.textContent = combo;
+    }
+
+    if (accuracyElement) {
+        accuracyElement.textContent = getAccuracy() + "%";
+    }
+
+    if (missedElement) {
+        missedElement.textContent = missedTargets;
+    }
+}
+
+
+function updateLevel() {
+    const newLevel = Math.floor(score / 100) + 1;
+
+    if (newLevel !== level) {
+        level = newLevel;
+
+        if (levelElement) {
+            levelElement.textContent = level;
+        }
+
+        currentFallSpeed = baseFallSpeed + ((level - 1) * speedIncrease);
+    } else {
+        if (levelElement) {
+            levelElement.textContent = level;
+        }
+    }
+}
+
+
+function showCorrectEffect(target) {
+    if (!target) return;
+
+    target.classList.remove("wrong");
+    target.classList.add("correct");
+
+    setTimeout(() => {
+        if (target && target.isConnected) {
+            target.classList.remove("correct");
+        }
+    }, 250);
+}
+
+
+function showWrongEffect(target) {
+    if (!target) return;
+
+    target.classList.remove("correct");
+    target.classList.add("shake", "wrong");
+
+    playTypingSound(false);
+
+    if (navigator.vibrate) {
+        navigator.vibrate([35, 25, 35]);
+    }
+
+    setTimeout(() => {
+        if (target && target.isConnected) {
+            target.classList.remove("shake", "wrong");
+        }
+    }, 350);
+}
+
+
+function createCompletionBurst(element) {
+    if (!element) return;
+
+    const rect = element.getBoundingClientRect();
+    const gameRect = gameArea.getBoundingClientRect();
+
+    const centerX =
+        rect.left - gameRect.left + rect.width / 2;
+
+    const centerY =
+        rect.top - gameRect.top + rect.height / 2;
+
+    const burst = document.createElement("div");
+    burst.className = "completion-burst";
+
+    burst.style.left = `${centerX}px`;
+    burst.style.top = `${centerY}px`;
+
+    const isWord = element.classList.contains("word");
+    const particleCount = isWord ? 28 : 14;
+
+    const ring = document.createElement("div");
+    ring.className = "completion-ring";
+    burst.appendChild(ring);
+
+    const flash = document.createElement("div");
+    flash.className = "completion-flash";
+    burst.appendChild(flash);
+
+    for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement("span");
+        particle.className = "completion-particle";
+
+        const angle =
+            (Math.PI * 2 * i) / particleCount;
+
+        const distance =
+            45 + Math.random() * 65;
+
+        const x =
+            Math.cos(angle) * distance;
+
+        const y =
+            Math.sin(angle) * distance;
+
+        particle.style.setProperty(
+            "--particle-x",
+            `${x}px`
+        );
+
+        particle.style.setProperty(
+            "--particle-y",
+            `${y}px`
+        );
+
+        burst.appendChild(particle);
+    }
+
+    gameArea.appendChild(burst);
+
+    setTimeout(() => {
+        burst.remove();
+    }, 700);
+}
+
+
+function createSparkles(element) {
+    if (!element) return;
+
+    const rect = element.getBoundingClientRect();
+    const gameRect = gameArea.getBoundingClientRect();
+
+    const centerX =
+        rect.left - gameRect.left + rect.width / 2;
+
+    const centerY =
+        rect.top - gameRect.top + rect.height / 2;
+
+    const sparkleContainer = document.createElement("div");
+    sparkleContainer.className = "typing-sparkles";
+
+    sparkleContainer.style.left = `${centerX}px`;
+    sparkleContainer.style.top = `${centerY}px`;
+
+    for (let i = 0; i < 4; i++) {
+        const sparkle = document.createElement("span");
+
+        sparkle.className = "typing-sparkle";
+
+        const angle =
+            Math.random() * Math.PI * 2;
+
+        const distance =
+            10 + Math.random() * 20;
+
+        sparkle.style.setProperty(
+            "--sparkle-x",
+            `${Math.cos(angle) * distance}px`
+        );
+
+        sparkle.style.setProperty(
+            "--sparkle-y",
+            `${Math.sin(angle) * distance}px`
+        );
+
+        sparkleContainer.appendChild(sparkle);
+    }
+
+    gameArea.appendChild(sparkleContainer);
+
+    setTimeout(() => {
+        sparkleContainer.remove();
+    }, 500);
+}
+
+
+function playTypingSound(correct) {
+    if (!soundEnabled) return;
+
+    try {
+        const AudioContext =
+            window.AudioContext ||
+            window.webkitAudioContext;
+
+        if (!AudioContext) return;
+
+        const context = new AudioContext();
+
+        const oscillator =
+            context.createOscillator();
+
+        const gain =
+            context.createGain();
+
+        oscillator.connect(gain);
+        gain.connect(context.destination);
+
+        oscillator.type = "sine";
+
+        oscillator.frequency.value =
+            correct ? 620 : 170;
+
+        gain.gain.setValueAtTime(
+            0.0001,
+            context.currentTime
+        );
+
+        gain.gain.exponentialRampToValueAtTime(
+            0.045,
+            context.currentTime + 0.01
+        );
+
+        gain.gain.exponentialRampToValueAtTime(
+            0.0001,
+            context.currentTime + 0.08
+        );
+
+        oscillator.start();
+
+        oscillator.stop(
+            context.currentTime + 0.09
+        );
+
+        setTimeout(() => {
+            context.close().catch(() => {});
+        }, 150);
+    } catch (error) {
+        // Audio is optional, so ignore browser audio errors.
+    }
+}
+
+
+function findMatchingTarget(key) {
+    const matches = [];
+
+    activeTargets.forEach(target => {
+        if (!target || !target.isConnected) {
+            return;
+        }
+
+        const text =
+            (target.dataset.targetText || "").toLowerCase();
+
+        const typed =
+            (target.dataset.typedText || "").toLowerCase();
+
+        if (!text) {
+            return;
+        }
+
+        if (target.classList.contains("word")) {
+            if (typed.length > 0) {
+                return;
+            }
+        }
+
+        if (text.startsWith(key)) {
+            const top =
+                parseFloat(target.style.top) || 0;
+
+            matches.push({
+                target,
+                top
+            });
+        }
+    });
+
+    if (matches.length === 0) {
+        return null;
+    }
+
+    matches.sort((a, b) => a.top - b.top);
+
+    return matches[matches.length - 1].target;
+}
+
+
+function handleLetterInput(key, target) {
+    if (!target || !activeTargets.has(target)) {
+        return;
+    }
+
+    const expected =
+        (target.dataset.targetText || "").toLowerCase();
+
+    totalCharacters++;
+
+    if (key === expected) {
+        correctCharacters++;
+        score += 10;
+        combo++;
+
+        showCorrectEffect(target);
+        createCompletionBurst(target);
+        playTypingSound(true);
+
+        removeTarget(target);
+
+        updateStats();
+        updateLevel();
+
+        return;
+    }
+
+    combo = 0;
+
+    showWrongEffect(target);
+
+    updateStats();
+}
+
+
+function handleWordInput(key, target) {
+    if (!target || !activeTargets.has(target)) {
+        return;
+    }
+
+    const word =
+        (target.dataset.targetText || "").toLowerCase();
+
+    let typed =
+        (target.dataset.typedText || "").toLowerCase();
+
+    const expected =
+        word.charAt(typed.length);
+
+    totalCharacters++;
+
+    if (key === expected) {
+        typed += key;
+
+        target.dataset.typedText = typed;
+
+        correctCharacters++;
+        combo++;
+
+        const letterIndex = typed.length - 1;
+
+        const letterSpans =
+            target.querySelectorAll(".target-letter");
+
+        if (letterSpans[letterIndex]) {
+            letterSpans[letterIndex].classList.add("typed");
+        }
+
+        createSparkles(target);
+        showCorrectEffect(target);
+        playTypingSound(true);
+
+        if (typed.length >= word.length) {
+            score += word.length * 10;
+
+            createCompletionBurst(target);
+
+            removeTarget(target);
+
+            activeTypingTarget = null;
+
+            updateStats();
+            updateLevel();
+
+            return;
+        }
+
+        updateStats();
+        return;
+    }
+
+    combo = 0;
+
+    showWrongEffect(target);
+
+    updateStats();
+}
+
+
+function removeTarget(target) {
+    if (!target) return;
+
+    activeTargets.delete(target);
+
+    if (activeTypingTarget === target) {
+        activeTypingTarget = null;
+    }
+
+    if (target.isConnected) {
+        target.remove();
+    }
+}
+
+
+function removeAllTargets() {
+    activeTargets.forEach(target => {
+        if (target && target.isConnected) {
+            target.remove();
+        }
+    });
+
+    activeTargets.clear();
+
+    activeTypingTarget = null;
+
+    const remaining =
+        gameArea.querySelectorAll(".game-item");
+
+    remaining.forEach(element => {
+        element.remove();
+    });
+}
+
+
+document.addEventListener("keydown", event => {
+    if (!gameStarted || gamePaused) {
+        return;
+    }
+
+    if (event.key === "Escape") {
+        pauseGame();
+        return;
+    }
+
+    const key = event.key.toLowerCase();
+
+    if (
+        key.length !== 1 ||
+        !/[a-z]/.test(key)
+    ) {
+        return;
+    }
+
+    /*
+     * If the player is already typing a word,
+     * keep that word selected until it is finished.
+     */
+    if (activeTypingTarget) {
+        if (!activeTargets.has(activeTypingTarget)) {
+            activeTypingTarget = null;
+        } else {
+            if (
+                activeTypingTarget.classList.contains("word")
+            ) {
+                handleWordInput(
+                    key,
+                    activeTypingTarget
+                );
+            } else {
+                handleLetterInput(
+                    key,
+                    activeTypingTarget
+                );
+            }
+
+            return;
+        }
+    }
+
+    /*
+     * No target is currently selected.
+     * Find the closest/lower visible target
+     * beginning with the pressed key.
+     */
+    const target = findMatchingTarget(key);
+
+    if (!target) {
+        return;
+    }
+
+    activeTypingTarget = target;
+
+    if (target.classList.contains("word")) {
+        handleWordInput(key, target);
+    } else {
+        handleLetterInput(key, target);
+    }
+});
+
+
+if (startButton) {
+    startButton.addEventListener(
+        "click",
+        startGame
+    );
+}
+
+
+if (pauseButton) {
+    pauseButton.addEventListener(
+        "click",
+        pauseGame
+    );
+}
+
+
+if (restartButton) {
+    restartButton.addEventListener(
+        "click",
+        restartGame
+    );
+}
+
+
+if (playAgainButton) {
+    playAgainButton.addEventListener(
+        "click",
+        restartGame
+    );
+}
+
+
+document.addEventListener("visibilitychange", () => {
+    if (
+        document.hidden &&
+        gameStarted &&
+        !gamePaused
+    ) {
+        pauseGame();
+    }
+});
+
+
+window.addEventListener("blur", () => {
+    if (
+        gameStarted &&
+        !gamePaused
+    ) {
+        pauseGame();
+    }
+});
+
+
+updateStats();
+updateLevel();
