@@ -33,6 +33,10 @@ body {
 }
 
 
+.hidden {
+    display: none !important;
+}
+
 /* =========================================================
    MAIN GAME
    ========================================================= */
@@ -653,6 +657,14 @@ body {
    COMPLETION EFFECT
    ========================================================= */
 
+.completion-burst {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    pointer-events: none;
+    z-index: 26;
+}
+
 .completion-ring {
 
     position: absolute;
@@ -852,6 +864,28 @@ body {
 /* =========================================================
    TINY SPARKLES
    ========================================================= */
+
+.typing-sparkles {
+    position: absolute;
+    pointer-events: none;
+    z-index: 30;
+}
+
+.typing-sparkle {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #ffffff;
+    pointer-events: none;
+    box-shadow: 0 0 5px rgba(255,255,255,.95), 0 0 10px rgba(130,255,190,.75);
+    animation: typing-sparkle-fly .5s ease-out forwards;
+}
+
+@keyframes typing-sparkle-fly {
+    0% { transform: translate(-50%,-50%) scale(1.2); opacity: 1; }
+    100% { transform: translate(-50%,-50%) translate(var(--sparkle-x),var(--sparkle-y)) scale(0); opacity: 0; }
+}
 
 .sparkle {
 
