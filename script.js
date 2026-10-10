@@ -1216,64 +1216,69 @@ function targetMissed(
     updateStats();
 
 }
+
 function startGame() {
     gameStarted = true;
     gamePaused = false;
-    gameOver = false;
-
     gameSession++;
 
     score = 0;
     combo = 0;
+    level = 1;
     correctCharacters = 0;
     totalCharacters = 0;
-    missedTargets = 0;
+    totalAttempts = 0;
 
     activeTypingTarget = null;
-    removeAllTargets();
 
     clearTimeout(spawnTimer);
+    removeAllTargets();
+
+    currentFallSpeed = speedSettings[selectedSpeed].fallSpeed;
+    spawnDelay = speedSettings[selectedSpeed].spawnDelay;
 
     updateStats();
     updateLevel();
 
-    startScreen.classList.add("hidden");
-    resultsScreen.classList.add("hidden");
-    gameScreen.classList.remove("hidden");
+    // Hide the welcome screen.
+    welcome.classList.add("hidden");
 
-    pauseButton.textContent = "Pause";
+    // Hide the results and pause screens.
+    resultsScreen.classList.remove("show");
+    pauseScreen.classList.remove("show");
 
+    // Show the game controls.
+    gameControls.classList.add("visible");
+
+    // Reset the pause button.
+    pauseButton.textContent = "⏸ Pause";
+
+    // Create falling targets and start spawning.
     createInitialTargets();
     scheduleNextTarget(spawnDelay);
-
-    if (musicEnabled) {
-        music.play().catch(() => {});
-    }
 }
 
-
 function pauseGame() {
-    if (!gameStarted || gameOver) return;
+    if (!gameStarted) return;
 
     gamePaused = !gamePaused;
 
     if (gamePaused) {
-        pauseButton.textContent = "Resume";
-        pauseOverlay.classList.remove("hidden");
+        pauseButton.textContent = "▶ Continue";
+        pauseScreen.classList.add("show");
 
-        if (musicEnabled) {
+        if (music && musicPlaying) {
             music.pause();
         }
     } else {
-        pauseButton.textContent = "Pause";
-        pauseOverlay.classList.add("hidden");
+        pauseButton.textContent = "⏸ Pause";
+        pauseScreen.classList.remove("show");
 
-        if (musicEnabled) {
+        if (music && musicPlaying) {
             music.play().catch(() => {});
         }
     }
 }
-
 
 function restartGame() {
     clearTimeout(spawnTimer);
