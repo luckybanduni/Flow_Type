@@ -93,6 +93,7 @@ let spawnDelay =
 
 let gameStarted = false;
 let gamePaused = false;
+let gameOver = false;
 
 let score = 0;
 let combo = 0;
@@ -1216,46 +1217,49 @@ function targetMissed(
     updateStats();
 
 }
-
 function startGame() {
-    gameStarted = true;
-    gamePaused = false;
-    gameSession++;
+gameSession++;
 
-    score = 0;
-    combo = 0;
-    level = 1;
-    correctCharacters = 0;
-    totalCharacters = 0;
-    totalAttempts = 0;
+```
+clearTimeout(spawnTimer);
+removeAllTargets();
 
-    activeTypingTarget = null;
+gameStarted = true;
+gamePaused = false;
+gameOver = false;
 
-    clearTimeout(spawnTimer);
-    removeAllTargets();
+score = 0;
+combo = 0;
+level = 1;
+correctCharacters = 0;
+totalCharacters = 0;
+totalAttempts = 0;
 
-    currentFallSpeed = speedSettings[selectedSpeed].fallSpeed;
-    spawnDelay = speedSettings[selectedSpeed].spawnDelay;
+activeTypingTarget = null;
+startTime = Date.now();
 
-    updateStats();
-    updateLevel();
+currentFallSpeed = speedSettings[selectedSpeed].fallSpeed;
+spawnDelay = speedSettings[selectedSpeed].spawnDelay;
 
-    // Hide the welcome screen.
-    welcome.classList.add("hidden");
+// Hide the welcome screen.
+welcome.classList.add("hidden");
 
-    // Hide the results and pause screens.
-    resultsScreen.classList.remove("show");
-    pauseScreen.classList.remove("show");
+// Hide pause and results overlays.
+pauseScreen.classList.remove("show");
+resultsScreen.classList.remove("show");
 
-    // Show the game controls.
-    gameControls.classList.add("visible");
+// Show the in-game controls.
+gameControls.classList.add("visible");
 
-    // Reset the pause button.
-    pauseButton.textContent = "⏸ Pause";
+pauseButton.textContent = "⏸ Pause";
 
-    // Create falling targets and start spawning.
-    createInitialTargets();
-    scheduleNextTarget(spawnDelay);
+updateStats();
+updateLevel();
+
+createInitialTargets();
+scheduleNextTarget(spawnDelay);
+```
+
 }
 
 function pauseGame() {
