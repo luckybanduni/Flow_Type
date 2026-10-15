@@ -95,6 +95,9 @@ let gameStarted = false;
 let gamePaused = false;
 let gameOver = false;
 
+let missedTargets = 0;
+let soundEnabled = true;
+
 let score = 0;
 let combo = 0;
 let level = 1;
@@ -1217,72 +1220,112 @@ function targetMissed(
     updateStats();
 
 }
+/* =========================================
+   START GAME
+========================================= */
+
 function startGame() {
-gameSession++;
+    gameSession++;
 
-```
-clearTimeout(spawnTimer);
-removeAllTargets();
+    clearTimeout(spawnTimer);
+    removeAllTargets();
 
-gameStarted = true;
-gamePaused = false;
-gameOver = false;
+    gameStarted = true;
+    gamePaused = false;
+    gameOver = false;
 
-score = 0;
-combo = 0;
-level = 1;
-correctCharacters = 0;
-totalCharacters = 0;
-totalAttempts = 0;
+    score = 0;
+    combo = 0;
+    level = 1;
 
-activeTypingTarget = null;
-startTime = Date.now();
+    correctCharacters = 0;
+    totalCharacters = 0;
+    totalAttempts = 0;
+    missedTargets = 0;
 
-currentFallSpeed = speedSettings[selectedSpeed].fallSpeed;
-spawnDelay = speedSettings[selectedSpeed].spawnDelay;
+    activeTypingTarget = null;
+    startTime = Date.now();
 
-// Hide the welcome screen.
-welcome.classList.add("hidden");
+    currentFallSpeed = speedSettings[selectedSpeed].fallSpeed;
+    spawnDelay = speedSettings[selectedSpeed].spawnDelay;
 
-// Hide pause and results overlays.
-pauseScreen.classList.remove("show");
-resultsScreen.classList.remove("show");
+    // Hide the welcome screen.
+    if (welcome) {
+        welcome.style.display = "none";
+    }
 
-// Show the in-game controls.
-gameControls.classList.add("visible");
+    // Hide pause and results screens.
+    if (pauseScreen) {
+        pauseScreen.classList.remove("show");
+    }
 
-pauseButton.textContent = "⏸ Pause";
+    if (resultsScreen) {
+        resultsScreen.classList.remove("show");
+    }
 
-updateStats();
-updateLevel();
+    // Show game controls.
+    if (gameControls) {
+        gameControls.classList.add("visible");
+    }
 
-createInitialTargets();
-scheduleNextTarget(spawnDelay);
-```
+    if (pauseButton) {
+        pauseButton.textContent = "⏸ Pause";
+    }
 
+    updateStats();
+    updateLevel();
+
+    createInitialTargets();
+    scheduleNextTarget(spawnDelay);
+
+    if (musicPlaying && music) {
+        music.play().catch(() => {});
+    }
 }
 
+
+/* =========================================
+   PAUSE / RESUME
+========================================= */
+
 function pauseGame() {
-    if (!gameStarted) return;
+    if (!gameStarted || gameOver) {
+        return;
+    }
 
     gamePaused = !gamePaused;
 
     if (gamePaused) {
-        pauseButton.textContent = "▶ Continue";
-        pauseScreen.classList.add("show");
+        if (pauseButton) {
+            pauseButton.textContent = "▶ Resume";
+        }
 
-        if (music && musicPlaying) {
+        if (pauseScreen) {
+            pauseScreen.classList.add("show");
+        }
+
+        if (music) {
             music.pause();
         }
     } else {
-        pauseButton.textContent = "⏸ Pause";
-        pauseScreen.classList.remove("show");
+        if (pauseButton) {
+            pauseButton.textContent = "⏸ Pause";
+        }
 
-        if (music && musicPlaying) {
+        if (pauseScreen) {
+            pauseScreen.classList.remove("show");
+        }
+
+        if (musicPlaying && music) {
             music.play().catch(() => {});
         }
     }
 }
+
+
+/* =========================================
+   RESTART GAME
+========================================= */
 
 function restartGame() {
     clearTimeout(spawnTimer);
@@ -1297,22 +1340,21 @@ function restartGame() {
 
     activeTypingTarget = null;
 
-    score = 0;
-    combo = 0;
-    correctCharacters = 0;
-    totalCharacters = 0;
-    missedTargets = 0;
+    if (pauseScreen) {
+        pauseScreen.classList.remove("show");
+    }
 
-    updateStats();
-    updateLevel();
-
-    pauseOverlay.classList.add("hidden");
-    resultsScreen.classList.add("hidden");
-    gameScreen.classList.remove("hidden");
+    if (resultsScreen) {
+        resultsScreen.classList.remove("show");
+    }
 
     startGame();
 }
 
+
+/* =========================================
+   END GAME
+========================================= */
 
 function endGame() {
     gameStarted = false;
@@ -1325,21 +1367,30 @@ function endGame() {
 
     activeTypingTarget = null;
 
-    if (musicEnabled) {
+    if (music) {
         music.pause();
     }
 
-    finalScore.textContent = score;
-    finalAccuracy.textContent = getAccuracy() + "%";
-    finalCombo.textContent = combo;
+    if (finalScore) {
+        finalScore.textContent = score;
+    }
 
-    gameScreen.classList.add("hidden");
-    resultsScreen.classList.remove("hidden");
+    if (finalWpm) {
+        finalWpm.textContent = getWPM();
+    }
 
-    pauseOverlay.classList.add("hidden");
+    if (finalAccuracy) {
+        finalAccuracy.textContent = getAccuracy() + "%";
+    }
+
+    if (resultsScreen) {
+        resultsScreen.classList.add("show");
+    }
+
+    if (pauseScreen) {
+        pauseScreen.classList.remove("show");
+    }
 }
-
-
 function getAccuracy() {
     if (totalCharacters <= 0) {
         return 100;
@@ -1861,6 +1912,12 @@ if (restartButton) {
     );
 }
 
+if (resumeButton) {
+    resumeButton.addEventListener(
+       "click",
+       pauseGame
+    );
+}
 
 if (playAgainButton) {
     playAgainButton.addEventListener(
