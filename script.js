@@ -225,11 +225,9 @@ function toggleMusic() {
 
 }
 
-
-musicToggle.addEventListener(
-    "click",
-    toggleMusic
-);
+if (musicToggle) {
+    musicToggle.addEventListener("click", toggleMusic);
+}
 
 
 /* =========================================================
@@ -247,17 +245,13 @@ function closeBackgroundMenu() {
 }
 
 
-backgroundToggle.addEventListener(
-    "click",
-    event => {
-
+if (backgroundToggle && backgroundMenu) {
+    backgroundToggle.addEventListener("click", event => {
         event.stopPropagation();
-
         backgroundMenu.classList.toggle("show");
-
     }
-);
-
+                                     );
+}
 
 /* =========================================================
    APPLY BACKGROUND
