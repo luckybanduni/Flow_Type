@@ -1393,6 +1393,15 @@ function getAccuracy() {
     return Math.round((correctCharacters / totalCharacters) * 100);
 }
 
+function getWPM() {
+    if (!startTime) return 0;
+
+    const elapsedMinutes = (Date.now() - startTime) / 60000;
+
+    if (elapsedMinutes <= 0) return 0;
+
+    return Math.round((correctCharacters / 5) / elapsedMinutes);
+}
 
 function updateStats() {
     if (scoreElement) {
