@@ -1399,17 +1399,22 @@ function updateStats() {
         scoreElement.textContent = score;
     }
 
-    if (comboElement) {
-        comboElement.textContent = combo;
+    if (levelElement) {
+        levelElement.textContent = level;
+    }
+
+    if (wpmElement) {
+        wpmElement.textContent = getWPM();
     }
 
     if (accuracyElement) {
         accuracyElement.textContent = getAccuracy() + "%";
     }
 
-    if (missedElement) {
-        missedElement.textContent = missedTargets;
+    if (comboElement) {
+        comboElement.textContent = combo;
     }
+const missedElement = document.getElementById("missed");
 }
 
 
