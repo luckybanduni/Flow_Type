@@ -940,24 +940,70 @@ function createTarget(
         `${targetWidth}px`;
 
 
-    const areaWidth =
-        gameArea.clientWidth;
+const areaWidth = gameArea.clientWidth;
+const padding = 10;
+const gap = 24;
 
-    const maxLeft =
-        Math.max(
-            10,
-            areaWidth -
-            targetWidth -
-            10
+const maxLeft = Math.max(
+    padding,
+    areaWidth - targetWidth - padding
+);
+
+let chosenLeft = padding;
+let bestOverlap = Infinity;
+
+// Try multiple positions and choose the one
+// with the least overlap with existing targets.
+for (let attempt = 0; attempt < 40; attempt++) {
+    const candidateLeft = randomNumber(
+        padding,
+        maxLeft
+    );
+
+    let overlap = 0;
+
+    activeTargets.forEach(target => {
+        if (!target.isConnected) return;
+
+        const targetLeft = target.offsetLeft;
+        const targetWidthExisting = target.offsetWidth;
+
+        const horizontalOverlap =
+            Math.max(
+                0,
+                Math.min(
+                    candidateLeft + targetWidth,
+                    targetLeft + targetWidthExisting
+                ) - Math.max(candidateLeft, targetLeft)
+            );
+
+        const verticalDistance = Math.abs(
+            parseFloat(target.style.top || target.offsetTop) -
+            startY
         );
 
+        // Prefer positions that don't overlap horizontally
+        // when the targets are close vertically.
+        if (verticalDistance < 140) {
+            overlap += horizontalOverlap *
+                (1 - verticalDistance / 140);
+        } else if (horizontalOverlap < gap) {
+            overlap += 0;
+        }
+    });
 
-    element.style.left =
-        `${randomNumber(
-            10,
-            maxLeft
-        )}px`;
+    if (overlap < bestOverlap) {
+        bestOverlap = overlap;
+        chosenLeft = candidateLeft;
+    }
 
+    if (overlap === 0) {
+        break;
+    }
+}
+
+element.style.left = `${chosenLeft}px`;
+   
 
     element.style.top =
         `${startY}px`;
