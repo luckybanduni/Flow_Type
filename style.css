@@ -541,9 +541,9 @@ body {
 }
 
 
-/* =========================================================
-   FALLING TARGETS
-   ========================================================= */
+/* =========================================
+   FLOWTYPE — FLOATING TARGET DESIGN
+   ========================================= */
 
 .game-item {
     position: absolute;
@@ -552,40 +552,37 @@ body {
     align-items: center;
     justify-content: center;
 
-    min-width: 42px;
-    min-height: 42px;
+    min-width: 0;
+    min-height: 0;
 
-    padding: 8px 13px;
+    padding: 5px 8px;
 
-    border-radius: 12px;
+    /* Remove the box */
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
 
-    background: rgba(126, 87, 255, 0.13);
-
-    border: 1px solid rgba(165, 140, 255, 0.5);
-
+    /* Clean, readable text */
     color: #ffffff;
-
-    font-size: 18px;
-
+    font-size: 20px;
     font-weight: 700;
+    letter-spacing: 1.5px;
 
-    letter-spacing: 1px;
+    /* Subtle text glow */
+    text-shadow:
+        0 0 8px rgba(180, 160, 255, 0.35),
+        0 0 18px rgba(126, 87, 255, 0.18);
 
+    white-space: nowrap;
     user-select: none;
-
     pointer-events: none;
 
     z-index: 10;
 
-    text-shadow:
-        0 0 12px rgba(255, 255, 255, 0.3);
-
-    box-shadow:
-        0 0 20px rgba(126, 87, 255, 0.13);
-
     transition:
-        background 0.15s ease,
-        border-color 0.15s ease;
+        color 0.2s ease,
+        text-shadow 0.2s ease;
 }
 
 .game-item.word {
@@ -595,21 +592,24 @@ body {
 
     letter-spacing: 0.5px;
 }
-/* =========================================================
-   INDIVIDUAL TYPED LETTER
-   ========================================================= */
+
+/* =========================================
+   FLOWTYPE — INDIVIDUAL LETTERS
+   ========================================= */
 
 .target-letter {
     display: inline-block;
 
     color: #ffffff;
 
+    text-shadow:
+        0 0 7px rgba(255, 255, 255, 0.2);
+
     transition:
         color 0.18s ease,
         transform 0.18s ease,
         text-shadow 0.18s ease;
 }
-
 
 /* CORRECTLY TYPED LETTER */
 
